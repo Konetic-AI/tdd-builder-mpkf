@@ -1,0 +1,6 @@
+{
+  "doc.version": "1.0-simple",
+  "project.name": "Simple Internal Dashboard",
+  "summary.problem": "Business team lacks visibility into key daily metrics.",
+  "summary.solution": "Build a simple, non-critical internal web dashboard that displays the top 5 daily business metrics from a single database."
+}

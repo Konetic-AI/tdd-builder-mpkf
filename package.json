@@ -1,0 +1,29 @@
+{
+  "name": "tdd-builder-mpkf",
+  "version": "1.0.0",
+  "description": "Enterprise-grade Technical Design Document generator compliant with MPKF standards",
+  "main": "handlers/generate_tdd.js",
+  "scripts": {
+    "test": "node test_runner.js",
+    "test:simple": "node -e \"require('./test_runner').runTest('Simple', 'simple')\"",
+    "test:enterprise": "node -e \"require('./test_runner').runTest('Enterprise', 'enterprise')\"",
+    "test:mcp": "node -e \"require('./test_runner').runTest('MCP-Specific', 'mcp-specific')\"",
+    "generate": "node cli.js"
+  },
+  "keywords": [
+    "mcp",
+    "tdd",
+    "mpkf",
+    "technical-design",
+    "documentation",
+    "enterprise",
+    "architecture"
+  ],
+  "author": "MPKF Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
