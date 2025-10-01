@@ -10,6 +10,88 @@
 const fs = require('fs').promises;
 const path = require('path');
 
+// --- TEMPLATE CACHE ---
+// Caching mechanism to avoid reading the template file on every invocation
+let templateCache = null;
+let templateCacheTimestamp = null;
+const TEMPLATE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// --- INPUT VALIDATION UTILITIES ---
+
+/**
+ * Validates if a string is a valid ISO 8601 date.
+ * Supports formats: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, YYYY-MM-DDTHH:mm:ss.sssZ
+ * @param {string} dateString - The date string to validate.
+ * @returns {boolean} - True if valid ISO 8601 date, false otherwise.
+ */
+function isValidIso8601Date(dateString) {
+  if (!dateString || typeof dateString !== 'string') {
+    return false;
+  }
+
+  // ISO 8601 date regex patterns
+  const iso8601Patterns = [
+    /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/, // YYYY-MM-DDTHH:mm:ss
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/, // YYYY-MM-DDTHH:mm:ss.sssZ
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/ // With timezone
+  ];
+
+  const matchesPattern = iso8601Patterns.some(pattern => pattern.test(dateString));
+  if (!matchesPattern) {
+    return false;
+  }
+
+  // Validate that the date is actually valid (not 2025-13-45)
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date.getTime());
+}
+
+/**
+ * Validates the project_data object for type correctness and required constraints.
+ * @param {object} project_data - The project data to validate.
+ * @param {string} complexity - The complexity level.
+ * @returns {object} - { valid: boolean, errors: string[] }
+ */
+function validateProjectData(project_data, complexity) {
+  const errors = [];
+
+  if (!project_data || typeof project_data !== 'object') {
+    errors.push('project_data must be a valid object');
+    return { valid: false, errors };
+  }
+
+  if (!complexity || typeof complexity !== 'string') {
+    errors.push('complexity must be a valid string');
+    return { valid: false, errors };
+  }
+
+  const validComplexities = ['simple', 'startup', 'enterprise', 'mcp-specific', 'mcp'];
+  if (!validComplexities.includes(complexity)) {
+    errors.push(`complexity must be one of: ${validComplexities.join(', ')}`);
+  }
+
+  // Validate specific fields if provided
+  if (project_data['doc.created_date'] && !isValidIso8601Date(project_data['doc.created_date'])) {
+    errors.push(`doc.created_date must be a valid ISO 8601 date (e.g., YYYY-MM-DD). Got: ${project_data['doc.created_date']}`);
+  }
+
+  // Validate project name is not empty if provided
+  if (project_data['project.name'] !== undefined && (!project_data['project.name'] || typeof project_data['project.name'] !== 'string' || project_data['project.name'].trim() === '')) {
+    errors.push('project.name must be a non-empty string');
+  }
+
+  // Validate version format if provided
+  if (project_data['doc.version'] !== undefined && (!project_data['doc.version'] || typeof project_data['doc.version'] !== 'string')) {
+    errors.push('doc.version must be a non-empty string');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
 // --- OPUS-POWERED HOOKS ---
 // In production, these would make API calls to external services.
 const opus = {
@@ -105,6 +187,16 @@ async function validate_and_generate_tdd(args) {
   const { project_data, complexity, mpkf_files = [] } = args;
 
   try {
+    // --- 0. Input Validation Phase ---
+    const validation = validateProjectData(project_data, complexity);
+    if (!validation.valid) {
+      return {
+        status: "error",
+        message: "Input validation failed",
+        validation_errors: validation.errors
+      };
+    }
+
     // --- 1. MPKF Interrogation Phase ---
     const template = await loadTemplate();
     const master_reqs = getMpkfRequirements(complexity);
@@ -228,17 +320,46 @@ async function validate_and_generate_tdd(args) {
 // --- HELPER FUNCTIONS ---
 
 /**
- * Loads the TDD template from file system.
+ * Loads the TDD template from file system with caching.
+ * Uses a TTL-based cache to avoid repeated file reads.
  * @returns {string} - The template content.
  */
 async function loadTemplate() {
+  const now = Date.now();
+
+  // Check if cache is valid
+  if (templateCache && templateCacheTimestamp && (now - templateCacheTimestamp) < TEMPLATE_CACHE_TTL) {
+    return templateCache;
+  }
+
+  // Load template from file or use embedded fallback
   try {
     const templatePath = path.join(__dirname, '..', 'templates', 'tdd_v5.0.md');
-    return await fs.readFile(templatePath, 'utf8');
+    const template = await fs.readFile(templatePath, 'utf8');
+
+    // Update cache
+    templateCache = template;
+    templateCacheTimestamp = now;
+
+    return template;
   } catch (error) {
     // Fallback to embedded template if file not found
-    return getEmbeddedTemplate();
+    const template = getEmbeddedTemplate();
+
+    // Cache the embedded template too
+    templateCache = template;
+    templateCacheTimestamp = now;
+
+    return template;
   }
+}
+
+/**
+ * Clears the template cache (useful for testing or hot-reloading).
+ */
+function clearTemplateCache() {
+  templateCache = null;
+  templateCacheTimestamp = null;
 }
 
 /**
@@ -383,6 +504,33 @@ function getMpkfRequirements(complexity) {
     'summary.solution': 'Describe the solution you envision at a high level.'
   };
 
+  // Startup complexity: Lean, MVP-focused requirements for early-stage products
+  const startup_reqs = {
+    ...base_reqs,
+    'doc.created_date': 'What is the creation date for this TDD?',
+    'doc.authors': 'Who are the authors of this TDD?',
+    'summary.key_decisions': 'What are the key architectural decisions for your MVP?',
+    'summary.success_criteria': 'What are your initial success metrics (KPIs)?',
+    'context.business_goals': 'What is your core value proposition and initial business goal?',
+    'context.scope_in': 'What is the minimum viable feature set for launch?',
+    'context.scope_out': 'What features are you explicitly deferring post-MVP?',
+    'context.personas': 'Who is your primary user persona or early adopter?',
+    'constraints.technical': 'Are there any technical constraints (budget, timeline, existing tech)?',
+    'constraints.business': 'What is your runway and time-to-market constraint?',
+    'architecture.style': 'What is your architectural approach (monolith, serverless, etc.)?',
+    'architecture.tech_stack': 'What is your technology stack?',
+    'architecture.c4_l1_description': 'Provide a high-level system context description.',
+    'nfr.performance': 'What are your baseline performance expectations?',
+    'nfr.scalability': 'How many users do you expect in the first 6 months?',
+    'security.auth': 'What is your authentication approach?',
+    'security.data_classification': 'What type of data will you handle (user data, PII, etc.)?',
+    'ops.deployment_strategy': 'What is your deployment strategy (cloud provider, CI/CD)?',
+    'implementation.methodology': 'What is your development approach (Agile, Lean Startup, etc.)?',
+    'implementation.roadmap': 'What is your MVP roadmap and key milestones?',
+    'risks.technical': 'What are your biggest technical risks or unknowns?',
+    'risks.mitigation': 'How will you validate assumptions and mitigate risks?'
+  };
+
   const enterprise_reqs = {
     ...base_reqs,
     'doc.created_date': 'What is the creation date for this TDD?',
@@ -440,6 +588,7 @@ function getMpkfRequirements(complexity) {
 
   const requirements = {
     simple: { required_fields: base_reqs },
+    startup: { required_fields: startup_reqs },
     enterprise: { required_fields: enterprise_reqs },
     'mcp-specific': { required_fields: mcp_reqs },
     'mcp': { required_fields: mcp_reqs }  // Support both 'mcp' and 'mcp-specific'
@@ -504,12 +653,20 @@ function generateAuditReports(project_data, master_reqs, tddOutput, complexity) 
     ? orphans.slice(0, 5).map(o => o.replace(/{{/g, '\\{\\{').replace(/}}/g, '\\}\\}')).join(', ') + (orphans.length > 5 ? '...' : '')
     : '';
 
+  const sectionCountMap = {
+    'simple': '4 basic',
+    'startup': '7 MVP-focused',
+    'enterprise': '9 stages',
+    'mcp-specific': '9 stages + MCP section',
+    'mcp': '9 stages + MCP section'
+  };
+
   const completenessReport = `## Completeness Report
 
 | Check | Status | Details |
 |:---|:---|:---|
 | Orphan Variables | ${hasOrphans ? '🔴 Failed' : '✅ Passed'} | ${hasOrphans ? `${orphans.length} orphan variable tag(s) found: ${orphanDisplay}` : 'No orphan variable tags remain in the final document.'} |
-| Required Sections | ✅ Passed | All ${complexity === 'simple' ? '4 basic' : (complexity === 'mcp-specific' || complexity === 'mcp') ? '9 stages + MCP section' : '9 stages'} sections present per complexity level. |
+| Required Sections | ✅ Passed | All ${sectionCountMap[complexity] || '9 stages'} sections present per complexity level. |
 | Diagram Generation | ✅ Passed | Diagram placeholders ${project_data && project_data['architecture.c4_l1_description'] ? 'populated with PlantUML' : 'marked as not provided'}. |
 | Document Structure | ✅ Passed | Document maintains valid Markdown structure and MPKF template integrity. |
 `;
@@ -517,5 +674,10 @@ function generateAuditReports(project_data, master_reqs, tddOutput, complexity) 
   return { gapTable, complianceReport, completenessReport };
 }
 
-// Export the handler
-module.exports = { validate_and_generate_tdd };
+// Export the handler and utility functions
+module.exports = { 
+  validate_and_generate_tdd,
+  isValidIso8601Date,
+  validateProjectData,
+  clearTemplateCache
+};

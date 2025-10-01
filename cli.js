@@ -62,11 +62,12 @@ async function interactiveMode() {
   // Select complexity
   console.log('Select project complexity:');
   console.log('  1. Simple (POCs, internal tools)');
-  console.log('  2. Enterprise (production systems)');
-  console.log('  3. MCP-Specific (AI/LLM tools)\n');
+  console.log('  2. Startup (MVP-focused, early-stage products)');
+  console.log('  3. Enterprise (production systems)');
+  console.log('  4. MCP-Specific (AI/LLM tools)\n');
 
-  const complexityChoice = await prompt('Enter choice (1-3): ');
-  const complexityMap = { '1': 'simple', '2': 'enterprise', '3': 'mcp-specific' };
+  const complexityChoice = await prompt('Enter choice (1-4): ');
+  const complexityMap = { '1': 'simple', '2': 'startup', '3': 'enterprise', '4': 'mcp-specific' };
   const complexity = complexityMap[complexityChoice] || 'enterprise';
 
   console.log(`\n${colors.yellow}Selected complexity: ${complexity}${colors.reset}\n`);
@@ -79,6 +80,26 @@ async function interactiveMode() {
   project_data['project.name'] = await prompt('Project Name: ');
   project_data['summary.problem'] = await prompt('Problem Statement (1-2 sentences): ');
   project_data['summary.solution'] = await prompt('Proposed Solution (high level): ');
+
+  if (complexity === 'startup') {
+    // Startup-specific questions (MVP-focused)
+    project_data['doc.created_date'] = new Date().toISOString().split('T')[0];
+    project_data['doc.authors'] = await prompt('Authors: ');
+    project_data['summary.key_decisions'] = await prompt('Key Architectural Decisions for MVP: ');
+    project_data['summary.success_criteria'] = await prompt('Initial Success Metrics (KPIs): ');
+    project_data['context.business_goals'] = await prompt('Core Value Proposition: ');
+    project_data['context.scope_in'] = await prompt('Minimum Viable Feature Set: ');
+    project_data['context.scope_out'] = await prompt('Features Deferred Post-MVP: ');
+    project_data['context.personas'] = await prompt('Primary User Persona: ');
+    project_data['constraints.technical'] = await prompt('Technical Constraints: ');
+    project_data['constraints.business'] = await prompt('Runway and Time-to-Market: ');
+    project_data['architecture.style'] = await prompt('Architecture Approach: ');
+    project_data['architecture.tech_stack'] = await prompt('Technology Stack: ');
+    project_data['nfr.performance'] = await prompt('Baseline Performance Expectations: ');
+    project_data['nfr.scalability'] = await prompt('Expected Users (first 6 months): ');
+    project_data['security.auth'] = await prompt('Authentication Approach: ');
+    project_data['ops.deployment_strategy'] = await prompt('Deployment Strategy: ');
+  }
 
   if (complexity === 'enterprise' || complexity === 'mcp-specific') {
     // Additional enterprise questions
@@ -215,7 +236,7 @@ Options:
   (no options)     Interactive mode - answer questions to generate TDD
   -f, --file PATH  Load project data from JSON file
   -h, --help       Show this help message
-  
+
 Examples:
   node cli.js                          # Interactive mode
   node cli.js -f project.json          # Load from file
@@ -228,14 +249,14 @@ Output:
     } else {
       throw new Error('Invalid arguments. Use --help for usage information.');
     }
-    
+
     // Generate TDD
     const result = await generateWithRetry(project_data, complexity);
-    
+
     if (result.status === 'complete') {
       // Display summary
       console.log(`\n${colors.green}${colors.bold}✅ TDD Generation Complete!${colors.reset}`);
-      
+
       if (result.metadata) {
         console.log(`\n${colors.dim}Metadata:${colors.reset}`);
         console.log(`  Complexity: ${result.metadata.complexity}`);
@@ -243,24 +264,24 @@ Output:
         console.log(`  Populated Fields: ${result.metadata.populated_fields}`);
         console.log(`  Generated: ${result.metadata.generation_timestamp}`);
       }
-      
+
       // Check for any issues
       const orphans = (result.tdd.match(/{{[^}]+}}/g) || []).filter(v => !v.includes('*Not Provided*'));
       if (orphans.length > 0) {
         console.log(`\n${colors.yellow}⚠️  Warning: ${orphans.length} orphan variables found${colors.reset}`);
       }
-      
+
       // Save output
       const projectName = project_data['project.name'] || 'unnamed';
       const safeProjectName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const outputPath = path.join('output', `${safeProjectName}_tdd.md`);
-      
+
       await saveTDD(result.tdd, outputPath);
-      
+
       // Offer to open the file
       console.log(`\n${colors.dim}You can view the generated TDD at: ${outputPath}${colors.reset}`);
     }
-    
+
   } catch (error) {
     console.log(`\n${colors.red}❌ Error: ${error.message}${colors.reset}`);
     if (process.env.DEBUG) {

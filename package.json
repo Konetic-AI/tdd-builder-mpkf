@@ -5,7 +5,9 @@
   "main": "handlers/generate_tdd.js",
   "scripts": {
     "test": "node test_runner.js",
+    "test:unit": "node tests/unit_test_runner.js",
     "test:simple": "node -e \"require('./test_runner').runTest('Simple', 'simple')\"",
+    "test:startup": "node -e \"require('./test_runner').runTest('Startup', 'startup')\"",
     "test:enterprise": "node -e \"require('./test_runner').runTest('Enterprise', 'enterprise')\"",
     "test:mcp": "node -e \"require('./test_runner').runTest('MCP-Specific', 'mcp-specific')\"",
     "generate": "node cli.js"

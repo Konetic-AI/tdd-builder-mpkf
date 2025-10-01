@@ -62,6 +62,16 @@ async function runTest(testName, complexity) {
         '## Stage 3: Architecture Design'
       ];
 
+      if (complexity === 'startup') {
+        requiredSections.push(
+          '## Stage 4: Non-Functional Requirements',
+          '## Stage 5: Security & Privacy Architecture',
+          '## Stage 6: Operations & Observability',
+          '## Stage 7: Implementation Planning',
+          '## Stage 8: Risk Management & Technical Debt'
+        );
+      }
+
       if (complexity === 'enterprise' || complexity === 'mcp-specific') {
         requiredSections.push(
           '## Stage 4: Non-Functional Requirements',
@@ -192,8 +202,9 @@ async function runAllTests() {
 
   const tests = [
     { name: 'Simple Project', complexity: 'simple' },
+    { name: 'Startup Project', complexity: 'startup' },
     { name: 'Enterprise Project', complexity: 'enterprise' },
-    { name: 'MCP-Specific Project', complexity: 'mcp' }
+    { name: 'MCP-Specific Project', complexity: 'mcp-specific' }
   ];
 
   const results = [];
