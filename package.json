@@ -10,7 +10,8 @@
     "test:startup": "node -e \"require('./test_runner').runTest('Startup', 'startup')\"",
     "test:enterprise": "node -e \"require('./test_runner').runTest('Enterprise', 'enterprise')\"",
     "test:mcp": "node -e \"require('./test_runner').runTest('MCP-Specific', 'mcp-specific')\"",
-    "generate": "node cli.js"
+    "generate": "node cli.js",
+    "test:audit": "node tests/test_generateAuditReports.js"
   },
   "keywords": [
     "mcp",
