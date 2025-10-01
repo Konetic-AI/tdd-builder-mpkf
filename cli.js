@@ -209,4 +209,72 @@ async function main() {
     } else if (args[0] === '--help' || args[0] === '-h') {
       // Help
       console.log(`
-Usage: n
+Usage: node cli.js [options]
+
+Options:
+  (no options)     Interactive mode - answer questions to generate TDD
+  -f, --file PATH  Load project data from JSON file
+  -h, --help       Show this help message
+  
+Examples:
+  node cli.js                          # Interactive mode
+  node cli.js -f project.json          # Load from file
+  node cli.js -f tests/sample_mcp.json # Use test data
+
+Output:
+  Generated TDD will be saved to ./output/[project_name]_tdd.md
+      `);
+      process.exit(0);
+    } else {
+      throw new Error('Invalid arguments. Use --help for usage information.');
+    }
+    
+    // Generate TDD
+    const result = await generateWithRetry(project_data, complexity);
+    
+    if (result.status === 'complete') {
+      // Display summary
+      console.log(`\n${colors.green}${colors.bold}✅ TDD Generation Complete!${colors.reset}`);
+      
+      if (result.metadata) {
+        console.log(`\n${colors.dim}Metadata:${colors.reset}`);
+        console.log(`  Complexity: ${result.metadata.complexity}`);
+        console.log(`  Total Fields: ${result.metadata.total_fields}`);
+        console.log(`  Populated Fields: ${result.metadata.populated_fields}`);
+        console.log(`  Generated: ${result.metadata.generation_timestamp}`);
+      }
+      
+      // Check for any issues
+      const orphans = (result.tdd.match(/{{[^}]+}}/g) || []).filter(v => !v.includes('*Not Provided*'));
+      if (orphans.length > 0) {
+        console.log(`\n${colors.yellow}⚠️  Warning: ${orphans.length} orphan variables found${colors.reset}`);
+      }
+      
+      // Save output
+      const projectName = project_data['project.name'] || 'unnamed';
+      const safeProjectName = projectName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const outputPath = path.join('output', `${safeProjectName}_tdd.md`);
+      
+      await saveTDD(result.tdd, outputPath);
+      
+      // Offer to open the file
+      console.log(`\n${colors.dim}You can view the generated TDD at: ${outputPath}${colors.reset}`);
+    }
+    
+  } catch (error) {
+    console.log(`\n${colors.red}❌ Error: ${error.message}${colors.reset}`);
+    if (process.env.DEBUG) {
+      console.log(error.stack);
+    }
+    process.exit(1);
+  } finally {
+    rl.close();
+  }
+}
+
+// Run if executed directly
+if (require.main === module) {
+  main();
+}
+
+module.exports = { main };
