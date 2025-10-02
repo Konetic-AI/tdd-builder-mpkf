@@ -211,6 +211,31 @@ npm run test:pdf
 npm run generate
 ```
 
+## 🔄 Git Sync Flows
+
+### One-command Sync (recommended)
+
+Set up a global Git alias for seamless synchronization across development environments:
+
+```bash
+git config --global alias.sync '!git add -A && git commit -m "wip(sync)" || true && git pull --rebase origin main && git push origin main'
+```
+
+After setting up the alias, simply run in any terminal (Replit shell, Cursor terminal, or VS Code terminal):
+
+```bash
+git sync
+```
+
+This command performs the following steps automatically:
+
+1. **Stage all changes** - Adds all modified, new, and deleted files to staging
+2. **Commit with `wip(sync)`** - Creates a work-in-progress commit if there are changes
+3. **Pull with rebase** - Fetches and rebases your local branch with the remote main branch
+4. **Push to GitHub** - Pushes your synchronized changes to the remote repository
+
+✅ **Note**: This workflow keeps Replit, Cursor, and VS Code environments perfectly synchronized.
+
 ## 📄 License
 This project is licensed under the MIT License.
 

@@ -122,6 +122,26 @@ DEBUG=* node cli.js      # Run with debug output
 node test_runner.js      # Run tests directly
 npm run test:jest -- --verbose  # Run Jest with verbose output
 ```
+
+## Syncing (Replit ↔ Local ↔ GitHub)
+
+Developers can use the `git sync` command to safely commit, pull, and push changes in one step:
+
+```bash
+git sync
+```
+
+This Git alias is defined once as:
+```bash
+git config --global alias.sync '!git add -A && git commit -m "wip(sync)" || true && git pull --rebase origin main && git push origin main'
+```
+
+The `git sync` workflow ensures Replit, Cursor, VS Code, and GitHub all stay in sync by:
+- Adding all changes (`git add -A`)
+- Creating a work-in-progress commit (`wip(sync)`) or continuing if no changes
+- Pulling latest changes with rebase (`git pull --rebase origin main`)
+- Pushing local changes (`git push origin main`)
+
 ## File Organization
 Root Files:
 - cli.js: Entry point for interactive use with enhanced error handling
