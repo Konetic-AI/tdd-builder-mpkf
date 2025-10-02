@@ -287,7 +287,7 @@ async function validate_and_generate_tdd(args) {
     }
 
     // --- 4. Generate Micro Builds Guide ---
-    const microBuildsGuide = generateMicroBuildsGuide(project_data, tddOutput);
+    const microBuildsGuide = generateMicroBuildsGuide();
     tddOutput = tddOutput.replace(/{{micro_builds}}/g, microBuildsGuide);
 
     // Clean up any remaining optional tags
@@ -608,117 +608,38 @@ function getMpkfRequirements(complexity) {
 }
 
 /**
- * Generates the Micro Builds Guide based on the TDD content.
- * Categorizes TDD sections into micro build buckets and provides a workflow.
- * @param {object} project_data - The project data object.
- * @param {string} tddOutput - The generated TDD content.
+ * Generates the standardized Micro Builds Guide.
  * @returns {string} - The formatted micro builds guide.
  */
-function generateMicroBuildsGuide(project_data, tddOutput) {
-  const projectName = project_data['project.name'] || 'Project';
-  
-  // Parse TDD sections and categorize them
-  const categories = {
-    'Core Modules': [],
-    'User Workflows': [],
-    'Shared Components': [],
-    'System Services': []
-  };
+function generateMicroBuildsGuide() {
+  return `
+This section provides a breakdown of the TDD into atomic micro builds for vibe coding success.  
+The goal is to decompose a comprehensive TDD into smaller, testable deliverables — enabling iterative flow-state development and reducing context drift.
 
-  // Analyze the TDD content to extract components
-  const sections = [
-    { name: 'Authentication', category: 'Core Modules', keywords: ['auth', 'login', 'security', 'user management'] },
-    { name: 'Dashboard', category: 'Core Modules', keywords: ['dashboard', 'main interface', 'overview'] },
-    { name: 'API Gateway', category: 'System Services', keywords: ['api', 'gateway', 'endpoint', 'service'] },
-    { name: 'Database Layer', category: 'System Services', keywords: ['database', 'data model', 'storage'] },
-    { name: 'User Interface', category: 'User Workflows', keywords: ['ui', 'interface', 'frontend', 'user experience'] },
-    { name: 'Authentication Flow', category: 'User Workflows', keywords: ['login flow', 'signup', 'user registration'] },
-    { name: 'Data Processing', category: 'System Services', keywords: ['processing', 'business logic', 'algorithms'] },
-    { name: 'Notification System', category: 'Shared Components', keywords: ['notification', 'alert', 'messaging'] },
-    { name: 'Configuration Management', category: 'Shared Components', keywords: ['config', 'settings', 'environment'] },
-    { name: 'Logging System', category: 'Shared Components', keywords: ['logging', 'monitoring', 'observability'] }
-  ];
+### Categories & Examples
 
-  // Simple keyword matching to categorize components
-  const tddText = tddOutput.toLowerCase();
-  sections.forEach(section => {
-    const hasKeyword = section.keywords.some(keyword => tddText.includes(keyword));
-    if (hasKeyword) {
-      categories[section.category].push(section.name);
-    }
-  });
+| Category        | Examples                               | Micro Build Focus                                   |
+|-----------------|----------------------------------------|-----------------------------------------------------|
+| Core Modules    | Authentication, Dashboard, Billing     | Standalone features (e.g., login flow with tests).  |
+| User Workflows  | Onboarding, Data Import, Report Gen.   | End-to-end journeys (e.g., signup → first action).  |
+| Shared Components | Notifications, Search, File Upload   | Reusable UI/logic chunks (e.g., upload handler).    |
+| System Services | API Layer, Integrations, Logging       | Backend services (e.g., endpoints with monitoring). |
 
-  // If no matches found, provide default examples based on project type
-  if (Object.values(categories).every(arr => arr.length === 0)) {
-    categories['Core Modules'] = ['Authentication', 'Main Application Logic'];
-    categories['User Workflows'] = ['User Onboarding', 'Primary User Journey'];
-    categories['Shared Components'] = ['Configuration Management', 'Error Handling'];
-    categories['System Services'] = ['API Layer', 'Data Storage'];
-  }
+### Suggested Workflow (10 Steps)
 
-  // Generate the micro builds guide
-  let guide = `### Micro Builds Strategy for ${projectName}
+1. **Brainstorm & Scope**: Draft concise PRD/README with features, stack, milestones.  
+2. **One-Shot MVP Framework**: Scaffold repo (e.g., Next.js, Supabase) in Replit.  
+3. **Break Down into Categories**: Use the table above to split the TDD into micro builds.  
+4. **Plan Mode per Feature**: New chat per feature (auth, workflow, service). Outline 3–5 micro steps.  
+5. **Implement in Isolation**: 20–30 min coding loops per micro build.  
+6. **Test & Review**: Unit/integration tests per micro build. Use AI for code reviews.  
+7. **Commit & Integrate**: Version-control each micro build with clear commit messages.  
+8. **Iterate with Feedback**: After each feature, run end-to-end tests and refine docs.  
+9. **Scale to Full Build**: Repeat until all categories are covered.  
+10. **Stage Deployments**: Release core modules first, then workflows, components, and services.  
 
-This guide breaks down the technical design into manageable micro builds for iterative development using the "vibe coding" approach.
-
-#### Component Categorization
-
-| Category | Examples | Micro Build Focus |
-|----------|----------|------------------|`;
-
-  // Add rows for each category
-  Object.entries(categories).forEach(([category, examples]) => {
-    if (examples.length > 0) {
-      const examplesList = examples.join(', ');
-      let focus = '';
-      
-      switch (category) {
-        case 'Core Modules':
-          focus = 'Standalone feature builds (e.g., login flow with tests)';
-          break;
-        case 'User Workflows':
-          focus = 'End-to-end user journey implementations';
-          break;
-        case 'Shared Components':
-          focus = 'Reusable utilities and cross-cutting concerns';
-          break;
-        case 'System Services':
-          focus = 'Infrastructure and service layer components';
-          break;
-      }
-      
-      guide += `\n| ${category} | ${examplesList} | ${focus} |`;
-    }
-  });
-
-  guide += `
-
-#### Vibe Coding Workflow
-
-Follow this 8-step iterative approach for each micro build:
-
-1. **Brainstorm** - Identify the smallest viable feature that delivers user value
-2. **Scope** - Define clear acceptance criteria and boundaries for the build
-3. **One-Shot MVP** - Build the minimal version that works end-to-end
-4. **Break Down** - Decompose the MVP into smaller, testable components
-5. **Plan Per Feature** - Create implementation tasks with clear dependencies
-6. **Implement** - Code with test-driven development and continuous integration
-7. **Test** - Verify functionality, performance, and integration points
-8. **Commit** - Create atomic commits with descriptive messages
-9. **Iterate** - Refine and enhance based on feedback and learnings
-10. **Scale** - Apply patterns and learnings to subsequent micro builds
-
-#### Implementation Tips
-
-- **Start Small**: Begin with authentication or a simple CRUD operation
-- **Test First**: Write tests before implementation to clarify requirements
-- **Incremental Value**: Each build should provide immediate user value
-- **Documentation**: Update this guide as you learn and refine the approach
-- **Feedback Loops**: Get user feedback early and often for each micro build
-
-*This guide is automatically generated based on your TDD content and can be customized as your project evolves.*`;
-
-  return guide;
+This approach ensures modular progress, faster feedback loops, and a scalable TDD-to-build workflow.
+       `;
 }
 
 /**

@@ -146,6 +146,38 @@ end note
 
 ---
 
+## Micro Builds Guide
+
+This section provides a breakdown of the TDD into atomic micro builds for vibe coding success.  
+The goal is to decompose a comprehensive TDD into smaller, testable deliverables — enabling iterative flow-state development and reducing context drift.
+
+### Categories & Examples
+
+| Category        | Examples                               | Micro Build Focus                                   |
+|-----------------|----------------------------------------|-----------------------------------------------------|
+| Core Modules    | Authentication, Dashboard, Billing     | Standalone features (e.g., login flow with tests).  |
+| User Workflows  | Onboarding, Data Import, Report Gen.   | End-to-end journeys (e.g., signup → first action).  |
+| Shared Components | Notifications, Search, File Upload   | Reusable UI/logic chunks (e.g., upload handler).    |
+| System Services | API Layer, Integrations, Logging       | Backend services (e.g., endpoints with monitoring). |
+
+### Suggested Workflow (10 Steps)
+
+1. **Brainstorm & Scope**: Draft concise PRD/README with features, stack, milestones.  
+2. **One-Shot MVP Framework**: Scaffold repo (e.g., Next.js, Supabase) in Replit.  
+3. **Break Down into Categories**: Use the table above to split the TDD into micro builds.  
+4. **Plan Mode per Feature**: New chat per feature (auth, workflow, service). Outline 3–5 micro steps.  
+5. **Implement in Isolation**: 20–30 min coding loops per micro build.  
+6. **Test & Review**: Unit/integration tests per micro build. Use AI for code reviews.  
+7. **Commit & Integrate**: Version-control each micro build with clear commit messages.  
+8. **Iterate with Feedback**: After each feature, run end-to-end tests and refine docs.  
+9. **Scale to Full Build**: Repeat until all categories are covered.  
+10. **Stage Deployments**: Release core modules first, then workflows, components, and services.  
+
+This approach ensures modular progress, faster feedback loops, and a scalable TDD-to-build workflow.
+       
+
+---
+
 ## Gap Analysis Report
 
 | Section | Status | Missing Elements | Source Reference |

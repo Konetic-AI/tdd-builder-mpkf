@@ -65,29 +65,27 @@ Retry Logic        Type Checking    Startup/MCP Support    Workflow Guide    Fal
 ## Architecture / Outputs
 
 ### Micro Builds Guide
-The Micro Builds Guide is a non-code output section that is automatically appended to generated TDDs to support developer workflow. It provides:
+The TDD builder appends the Micro Builds Guide after compliance/completeness reports. This standardized section provides:
 
-- **Component Categorization**: Analyzes TDD content and categorizes components into 4 buckets:
-  - Core Modules (standalone features like authentication)
-  - User Workflows (end-to-end user journeys)
-  - Shared Components (reusable utilities and cross-cutting concerns)
-  - System Services (infrastructure and service layer components)
+- **A 4-row table** with fixed categories:
+  - Core Modules (Authentication, Dashboard, Billing)
+  - User Workflows (Onboarding, Data Import, Report Gen.)
+  - Shared Components (Notifications, Search, File Upload)
+  - System Services (API Layer, Integrations, Logging)
 
-- **Vibe Coding Workflow**: Provides a 10-step iterative development approach:
-  1. Brainstorm - Identify smallest viable feature
-  2. Scope - Define acceptance criteria
-  3. One-Shot MVP - Build minimal working version
-  4. Break Down - Decompose into testable components
-  5. Plan Per Feature - Create implementation tasks
-  6. Implement - Code with TDD and CI
-  7. Test - Verify functionality and integration
-  8. Commit - Create atomic commits
-  9. Iterate - Refine based on feedback
-  10. Scale - Apply patterns to subsequent builds
+- **A fixed 10-step workflow** for breaking large builds into atomic tasks:
+  1. Brainstorm & Scope - Draft concise PRD/README with features, stack, milestones
+  2. One-Shot MVP Framework - Scaffold repo (e.g., Next.js, Supabase) in Replit
+  3. Break Down into Categories - Use the table above to split the TDD into micro builds
+  4. Plan Mode per Feature - New chat per feature (auth, workflow, service). Outline 3–5 micro steps
+  5. Implement in Isolation - 20–30 min coding loops per micro build
+  6. Test & Review - Unit/integration tests per micro build. Use AI for code reviews
+  7. Commit & Integrate - Version-control each micro build with clear commit messages
+  8. Iterate with Feedback - After each feature, run end-to-end tests and refine docs
+  9. Scale to Full Build - Repeat until all categories are covered
+  10. Stage Deployments - Release core modules first, then workflows, components, and services
 
-- **Implementation Tips**: Practical guidance for starting small, testing first, and maintaining incremental value
-
-The guide is generated using keyword analysis of the TDD content and provides default examples when no specific components are detected. It serves as a bridge between high-level technical design and practical implementation workflow.
+This approach ensures modular progress, faster feedback loops, and a scalable TDD-to-build workflow.
 
 ## Key Concepts
 
