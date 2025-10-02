@@ -260,36 +260,15 @@ This command performs the following steps automatically:
 ## 📄 License
 This project is licensed under the MIT License.
 
-## 🔄 Syncing Workflow
+## Syncing Workflow
 
-This project includes helper scripts to keep local development environments (Cursor/VS Code/Mac) and Replit in sync, preventing "uncommitted changes" errors and ensuring all environments have the latest code.
+**Local Dev (Cursor/VSCode/Mac):** `npm run autopush -- "commit message"`  
+→ Stages, commits, and syncs to GitHub.
 
-### Usage
+**Replit:** `npm run replit-sync`  
+→ Force-syncs with GitHub `main`, discards uncommitted changes, reinstalls deps.
 
-**Local Dev (Cursor/VS Code/Mac):**
-```bash
-npm run autopush -- "commit message"
-```
-This command:
-- Stages all changes (`git add -A`)
-- Commits with your message (default: "wip: autopush")
-- Pushes changes to GitHub (`git sync`)
-
-**Replit:**
-```bash
-npm run replit-sync
-```
-This command:
-- Force-syncs with origin/main (`git fetch origin && git reset --hard origin/main`)
-- Discards uncommitted changes (`git clean -fd`)
-- Reinstalls dependencies (`npm install`)
-
-### Workflow Benefits
-
-- **Prevents sync conflicts**: Local changes are always committed before pushing
-- **Clean Replit state**: Force-reset ensures Replit matches GitHub exactly
-- **Automatic dependency management**: Dependencies are reinstalled after sync
-- **Cross-environment compatibility**: Works seamlessly across Cursor, VS Code, and Replit
+**Why:** Prevents "can't pull: uncommitted changes", ensures GitHub = source of truth, keeps all environments aligned.
 
 ## 🙏 Acknowledgments
 

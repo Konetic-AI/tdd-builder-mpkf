@@ -118,6 +118,14 @@ async function runTest(testName, complexity) {
         console.log(`${colors.green}✅ All compliance reports present${colors.reset}`);
       }
 
+      // Check for Micro Builds Guide
+      if (!result.tdd.includes('## Micro Builds Guide')) {
+        console.log(`${colors.red}❌ Missing Micro Builds Guide in generated TDD${colors.reset}`);
+        return false;
+      } else {
+        console.log(`${colors.green}✅ Micro Builds Guide present${colors.reset}`);
+      }
+
       // Save output to file
       const outputPath = path.join(__dirname, 'output', `${complexity}_output.md`);
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
