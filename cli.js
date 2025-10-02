@@ -6,6 +6,7 @@
  */
 
 const { validate_and_generate_tdd } = require('./handlers/generate_tdd');
+const pdfExporter = require('./utils/pdfExporter');
 const fs = require('fs').promises;
 const path = require('path');
 const readline = require('readline');
@@ -208,16 +209,36 @@ async function saveTDD(tdd, outputPath) {
 }
 
 /**
+ * Export TDD to PDF
+ */
+async function exportToPDF(tdd, outputPath) {
+  try {
+    const success = await pdfExporter.exportToPDF(tdd, outputPath);
+    if (success) {
+      console.log(`${colors.green}✅ PDF exported to: ${outputPath}${colors.reset}`);
+    } else {
+      console.log(`${colors.yellow}⚠️  PDF export failed, check console for details${colors.reset}`);
+    }
+    return success;
+  } catch (error) {
+    console.log(`${colors.red}❌ PDF export error: ${error.message}${colors.reset}`);
+    return false;
+  }
+}
+
+/**
  * Main CLI function
  */
 async function main() {
   displayBanner();
 
   const args = process.argv.slice(2);
+  let exportPdf = false;
 
   try {
     let project_data, complexity;
 
+    // Parse arguments
     if (args.length === 0) {
       // Interactive mode
       ({ project_data, complexity } = await interactiveMode());
@@ -227,6 +248,15 @@ async function main() {
         throw new Error('Please provide a file path');
       }
       ({ project_data, complexity } = await fileMode(args[1]));
+      
+      // Check for PDF flag after file path
+      if (args[2] === '--pdf') {
+        exportPdf = true;
+      }
+    } else if (args[0] === '--pdf') {
+      // PDF flag in interactive mode
+      exportPdf = true;
+      ({ project_data, complexity } = await interactiveMode());
     } else if (args[0] === '--help' || args[0] === '-h') {
       // Help
       console.log(`
@@ -235,15 +265,19 @@ Usage: node cli.js [options]
 Options:
   (no options)     Interactive mode - answer questions to generate TDD
   -f, --file PATH  Load project data from JSON file
+  --pdf            Export generated TDD as PDF to output/ directory
   -h, --help       Show this help message
 
 Examples:
   node cli.js                          # Interactive mode
+  node cli.js --pdf                    # Interactive mode with PDF export
   node cli.js -f project.json          # Load from file
+  node cli.js -f project.json --pdf    # Load from file and export PDF
   node cli.js -f tests/sample_mcp.json # Use test data
 
 Output:
   Generated TDD will be saved to ./output/[project_name]_tdd.md
+  If --pdf flag is used, PDF will be saved to ./output/[project_name]_tdd.pdf
       `);
       process.exit(0);
     } else {
@@ -278,8 +312,19 @@ Output:
 
       await saveTDD(result.tdd, outputPath);
 
+      // Export to PDF if requested
+      if (exportPdf) {
+        const pdfPath = path.join('output', `${safeProjectName}_tdd.pdf`);
+        console.log(`\n${colors.blue}Generating PDF export...${colors.reset}`);
+        await exportToPDF(result.tdd, pdfPath);
+      }
+
       // Offer to open the file
       console.log(`\n${colors.dim}You can view the generated TDD at: ${outputPath}${colors.reset}`);
+      if (exportPdf) {
+        const pdfPath = path.join('output', `${safeProjectName}_tdd.pdf`);
+        console.log(`${colors.dim}PDF version available at: ${pdfPath}${colors.reset}`);
+      }
     }
 
   } catch (error) {
@@ -289,6 +334,12 @@ Output:
     }
     process.exit(1);
   } finally {
+    // Clean up PDF exporter resources
+    try {
+      await pdfExporter.cleanup();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
     rl.close();
   }
 }

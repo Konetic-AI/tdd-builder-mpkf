@@ -26,20 +26,21 @@ The TDD Builder is a Node.js command-line application that generates Technical D
    - Comprehensive test runner with color-coded output
 
 4. **Utilities** (`/utils/`)
-   - `pdfExporter.js`: Export functionality for converting markdown to formatted text
-   - Includes batch export capabilities
+   - `pdfExporter.js`: PDF export functionality using Puppeteer for headless PDF generation
+   - Includes batch export capabilities and fallback to text export
 
 5. **CLI Interface** (`cli.js`)
    - Interactive mode with guided questionnaire
    - File-based mode for batch processing
+   - PDF export functionality with `--pdf` flag
    - Retry logic for incomplete data
 
 ## Data Flow
 User Input → CLI → Validation → Template Population → Audit Reports → Output
-↓                    ↓
-Missing Fields?    MPKF Requirements
-↓                    ↑
-Ad-hoc Questions    Complexity Level
+↓                    ↓                    ↓
+Missing Fields?    MPKF Requirements    PDF Export (if --pdf flag)
+↓                    ↑                    ↓
+Ad-hoc Questions    Complexity Level    PDF Generation
 
 ## Key Concepts
 
@@ -70,20 +71,33 @@ The tool enforces compliance with:
 
 ### Setup
 ```bash
-npm install              # Install dependencies (if any)
-Development
-bashnode cli.js              # Run interactive mode
+npm install              # Install dependencies (Puppeteer for PDF export)
+```
+
+### Development
+```bash
+node cli.js              # Run interactive mode
 node cli.js -f <file>    # Run with input file
-Testing
-bashnpm test                 # Run all tests
+node cli.js --pdf        # Run interactive mode with PDF export
+node cli.js -f <file> --pdf  # Run with input file and PDF export
+```
+
+### Testing
+```bash
+npm test                 # Run all tests
 npm run test:simple      # Test simple complexity
 npm run test:startup     # Test startup complexity
 npm run test:enterprise  # Test enterprise complexity
 npm run test:mcp         # Test MCP complexity
 npm run test:audit       # Test audit reports
-Debugging
-bashDEBUG=* node cli.js      # Run with debug output
+npm run test:pdf         # Test PDF export functionality
+```
+
+### Debugging
+```bash
+DEBUG=* node cli.js      # Run with debug output
 node test_runner.js      # Run tests directly
+```
 File Organization
 Root Files:
 - cli.js: Entry point for interactive use
@@ -104,31 +118,35 @@ Test Data:
 Output:
 - output/: Generated TDD markdown files
 - exports/: Exported text files
-Environment Requirements
+## Environment Requirements
 
-Node.js >= 18.0.0
-No external dependencies required (pure Node.js)
-Works in Replit, local development, and CI/CD environments
+- Node.js >= 18.0.0
+- Puppeteer for PDF export functionality
+- Works in Replit, local development, and CI/CD environments
+- PDF export requires headless browser support (included with Puppeteer)
 
-Error Handling
+## Error Handling
 The application implements comprehensive error handling:
 
-Input validation with detailed error messages
-Graceful fallbacks for missing templates
-Retry logic for incomplete data
-Detailed stack traces in debug mode
+- Input validation with detailed error messages
+- Graceful fallbacks for missing templates
+- Retry logic for incomplete data
+- PDF export fallback to text format if Puppeteer fails
+- Detailed stack traces in debug mode
 
-Performance Optimizations
+## Performance Optimizations
 
-Template caching (1-hour TTL)
-Minimal dependency footprint
-Efficient regex-based template population
-Streaming file operations for large documents
+- Template caching (5-minute TTL)
+- Puppeteer browser instance reuse for PDF generation
+- Efficient regex-based template population
+- Streaming file operations for large documents
+- Headless browser optimization for CI/CD environments
 
-Security Considerations
+## Security Considerations
 
-Input sanitization to prevent script injection
-Field length limits (10,000 chars)
-No external API calls
-No sensitive data storage
-Read-only template access
+- Input sanitization to prevent script injection
+- Field length limits (10,000 chars)
+- No external API calls
+- No sensitive data storage
+- Read-only template access
+- Sandboxed PDF generation with restricted browser permissions

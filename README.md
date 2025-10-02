@@ -17,7 +17,8 @@ A powerful Node.js command-line tool that generates enterprise-grade Technical D
 - **Pre-TDD Validation**: Validates input data and generates targeted questions for missing information
 - **Self-Auditing**: Automatically appends Gap Analysis, Compliance, and Completeness reports
 - **Smart Caching**: Template caching for improved performance
-- **Export Capabilities**: Export TDDs as formatted text files
+- **Export Capabilities**: Export TDDs as formatted text files or PDF documents
+- **PDF Export**: Generate professional PDF documents with proper formatting and styling
 - **Interactive CLI**: User-friendly command-line interface with both interactive and file-based modes
 
 ## 📁 Project Structure
@@ -46,39 +47,99 @@ tdd-builder-mpkf/
 git clone https://github.com/your-username/tdd-builder-mpkf.git
 cd tdd-builder-mpkf
 
-# Install dependencies (currently none required)
+# Install dependencies
 npm install
-📖 Usage
-Interactive Mode
+```
+
+## 📖 Usage
+
+### Interactive Mode
 Start the interactive wizard to create a TDD by answering questions:
-bashnode cli.js
-File-Based Mode
+```bash
+node cli.js
+```
+
+### File-Based Mode
 Generate a TDD from a JSON file:
-bashnode cli.js -f tests/sample_enterprise.json
-Help
+```bash
+node cli.js -f tests/sample_enterprise.json
+```
+
+### PDF Export
+Generate a TDD and export it as a PDF:
+```bash
+# Interactive mode with PDF export
+node cli.js --pdf
+
+# File-based mode with PDF export
+node cli.js -f tests/sample_enterprise.json --pdf
+```
+
+### Help
 View all available options:
-bashnode cli.js --help
-🧪 Testing
-Run All Tests
-bashnpm test
-Run Specific Complexity Tests
-bashnpm run test:simple
+```bash
+node cli.js --help
+```
+## 🧪 Testing
+
+### Run All Tests
+```bash
+npm test
+```
+
+### Run Specific Complexity Tests
+```bash
+npm run test:simple
 npm run test:startup
 npm run test:enterprise
 npm run test:mcp
-Run Audit Tests
-bashnpm run test:audit
-📋 Commands Reference
-CommandDescriptionnpm testRun complete test suitenpm run test:simpleTest simple complexitynpm run test:startupTest startup complexitynpm run test:enterpriseTest enterprise complexitynpm run test:mcpTest MCP-specific complexitynpm run test:auditTest audit report generationnode cli.jsStart interactive modenode cli.js -f <file>Generate from JSON filenode cli.js --helpShow help informationnode test_pdf_export.jsTest export functionality
-📊 Sample Output
+```
+
+### Run Audit Tests
+```bash
+npm run test:audit
+```
+
+### Run PDF Export Tests
+```bash
+npm run test:pdf
+```
+## 📋 Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `npm test` | Run complete test suite |
+| `npm run test:simple` | Test simple complexity |
+| `npm run test:startup` | Test startup complexity |
+| `npm run test:enterprise` | Test enterprise complexity |
+| `npm run test:mcp` | Test MCP-specific complexity |
+| `npm run test:audit` | Test audit report generation |
+| `npm run test:pdf` | Test PDF export functionality |
+| `node cli.js` | Start interactive mode |
+| `node cli.js -f <file>` | Generate from JSON file |
+| `node cli.js --pdf` | Generate TDD and export as PDF |
+| `node cli.js -f <file> --pdf` | Generate from file and export as PDF |
+| `node cli.js --help` | Show help information |
+## 📊 Sample Output
+
 A generated TDD includes:
 
-9 comprehensive stages covering all aspects of technical design
-Architecture diagrams in PlantUML format
-Security and privacy considerations
-Operations and deployment strategies
-Risk management and mitigation plans
-Self-audit reports for compliance verification
+- 9 comprehensive stages covering all aspects of technical design
+- Architecture diagrams in PlantUML format
+- Security and privacy considerations
+- Operations and deployment strategies
+- Risk management and mitigation plans
+- Self-audit reports for compliance verification
+
+### PDF Export Features
+
+When using the `--pdf` flag, the generated PDF includes:
+
+- Professional formatting with proper typography
+- Headers and footers with page numbers
+- Styled tables, code blocks, and lists
+- A4 page format with appropriate margins
+- Fallback to text export if PDF generation fails
 
 🔐 MPKF Compliance
 This tool strictly adheres to the Master Project Knowledge File (MPKF) framework:

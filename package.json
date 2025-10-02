@@ -11,7 +11,9 @@
     "test:enterprise": "node -e \"require('./test_runner').runTest('Enterprise', 'enterprise')\"",
     "test:mcp": "node -e \"require('./test_runner').runTest('MCP-Specific', 'mcp-specific')\"",
     "generate": "node cli.js",
-    "test:audit": "node tests/test_generateAuditReports.js"
+    "test:audit": "node tests/test_generateAuditReports.js",
+    "test:jest": "jest",
+    "test:pdf": "jest tests/pdf_export.test.js"
   },
   "keywords": [
     "mcp",
@@ -27,6 +29,10 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "puppeteer": "^21.5.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }

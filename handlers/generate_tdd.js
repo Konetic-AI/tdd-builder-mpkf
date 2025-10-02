@@ -9,6 +9,7 @@
 
 const fs = require('fs').promises;
 const path = require('path');
+const { validateIS8601Date, validateDateFields } = require('../src/validation/date');
 
 // --- TEMPLATE CACHE ---
 // Caching mechanism to avoid reading the template file on every invocation
@@ -20,31 +21,13 @@ const TEMPLATE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Validates if a string is a valid ISO 8601 date.
- * Supports formats: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, YYYY-MM-DDTHH:mm:ss.sssZ
+ * Uses the centralized validation from src/validation/date.js
  * @param {string} dateString - The date string to validate.
  * @returns {boolean} - True if valid ISO 8601 date, false otherwise.
  */
 function isValidIso8601Date(dateString) {
-  if (!dateString || typeof dateString !== 'string') {
-    return false;
-  }
-
-  // ISO 8601 date regex patterns
-  const iso8601Patterns = [
-    /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/, // YYYY-MM-DDTHH:mm:ss
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/, // YYYY-MM-DDTHH:mm:ss.sssZ
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/ // With timezone
-  ];
-
-  const matchesPattern = iso8601Patterns.some(pattern => pattern.test(dateString));
-  if (!matchesPattern) {
-    return false;
-  }
-
-  // Validate that the date is actually valid (not 2025-13-45)
-  const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date.getTime());
+  const result = validateIS8601Date(dateString);
+  return result.isValid;
 }
 
 /**
@@ -71,9 +54,27 @@ function validateProjectData(project_data, complexity) {
     errors.push(`complexity must be one of: ${validComplexities.join(', ')}`);
   }
 
-  // Validate specific fields if provided
-  if (project_data['doc.created_date'] && !isValidIso8601Date(project_data['doc.created_date'])) {
-    errors.push(`doc.created_date must be a valid ISO 8601 date (e.g., YYYY-MM-DD). Got: ${project_data['doc.created_date']}`);
+  // Define all potential date fields that might be present in project data
+  const potentialDateFields = [
+    'doc.created_date',
+    'doc.updated_date',
+    'doc.modified_date',
+    'project.start_date',
+    'project.end_date',
+    'project.launch_date',
+    'implementation.start_date',
+    'implementation.end_date',
+    'implementation.deadline',
+    'milestone.target_date',
+    'milestone.deadline',
+    'review.due_date',
+    'review.scheduled_date'
+  ];
+
+  // Validate all date fields using centralized validation
+  const dateValidationResult = validateDateFields(project_data, potentialDateFields);
+  if (!dateValidationResult.isValid) {
+    errors.push(...dateValidationResult.errors);
   }
 
   // Validate project name is not empty if provided
