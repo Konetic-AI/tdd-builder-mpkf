@@ -16,6 +16,7 @@ A powerful Node.js command-line tool that generates enterprise-grade Technical D
   - `mcp-specific` - For AI/LLM tools using Model Context Protocol (51+ required fields)
 - **Pre-TDD Validation**: Validates input data and generates targeted questions for missing information
 - **Self-Auditing**: Automatically appends Gap Analysis, Compliance, and Completeness reports
+- **Micro Builds Guide**: Generates an appended micro-build plan to drive iterative development with vibe coding workflow
 - **Smart Caching**: Template caching with 5-minute TTL for improved performance (11ms → 0ms)
 - **ISO-8601 Date Validation**: Comprehensive date validation supporting all ISO-8601 formats with leap year and timezone support
 - **Enhanced Validation**: Robust input validation with detailed error messages and type checking
@@ -150,6 +151,10 @@ A generated TDD includes:
 - **Security and privacy considerations** including MCP-specific boundaries
 - **Operations and deployment strategies** with environment planning
 - **Risk management and mitigation plans** with technical debt tracking
+- **Micro Builds Guide** for iterative development including:
+  - Component categorization (Core Modules, User Workflows, Shared Components, System Services)
+  - Vibe coding workflow with 10-step iterative approach
+  - Implementation tips and best practices
 - **Self-audit reports** for compliance verification including:
   - Gap Analysis Report with missing field tracking
   - MPKF Compliance Report with validation status

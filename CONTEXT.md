@@ -12,6 +12,7 @@ The TDD Builder is a Node.js command-line application that generates Technical D
    - `generate_tdd.js`: Main business logic for TDD generation
    - Implements MPKF validation, template population, and self-auditing
    - Manages complexity levels and generates compliance reports
+   - Generates Micro Builds Guide for iterative development workflow
    - Features template caching (5-minute TTL) for performance optimization
    - Includes comprehensive input validation with ISO-8601 date support
    - Exports utility functions: `isValidIso8601Date`, `validateProjectData`, `clearTemplateCache`
@@ -19,7 +20,7 @@ The TDD Builder is a Node.js command-line application that generates Technical D
 2. **Template System** (`/templates/`)
    - `tdd_v5.0.md`: Official MPKF-compliant template with variable placeholders
    - Uses `{{variable}}` syntax for dynamic content injection
-   - Supports 9 stages of technical documentation
+   - Supports 9 stages of technical documentation plus Micro Builds Guide section
 
 3. **Test Infrastructure** (`/tests/`)
    - Sample JSON files for each complexity level including `sample_startup.json`
@@ -53,13 +54,40 @@ The TDD Builder is a Node.js command-line application that generates Technical D
    - Bulk validation capabilities for multiple date fields
 
 ## Data Flow
-User Input → CLI → Enhanced Validation → Template Population (Cached) → Audit Reports → Output
-↓                    ↓                    ↓                    ↓
-Missing Fields?    ISO-8601 Dates    MPKF Requirements    PDF Export (if --pdf flag)
-↓                    ↓                    ↑                    ↓
-Ad-hoc Questions    Error Messages    Complexity Level    PDF Generation
-↓                    ↓                    ↓                    ↓
-Retry Logic        Type Checking    Startup/MCP Support    Fallback Text Export
+User Input → CLI → Enhanced Validation → Template Population (Cached) → Micro Builds Guide → Audit Reports → Output
+↓                    ↓                    ↓                    ↓                    ↓
+Missing Fields?    ISO-8601 Dates    MPKF Requirements    Component Analysis    PDF Export (if --pdf flag)
+↓                    ↓                    ↑                    ↓                    ↓
+Ad-hoc Questions    Error Messages    Complexity Level    Categorization    PDF Generation
+↓                    ↓                    ↓                    ↓                    ↓
+Retry Logic        Type Checking    Startup/MCP Support    Workflow Guide    Fallback Text Export
+
+## Architecture / Outputs
+
+### Micro Builds Guide
+The Micro Builds Guide is a non-code output section that is automatically appended to generated TDDs to support developer workflow. It provides:
+
+- **Component Categorization**: Analyzes TDD content and categorizes components into 4 buckets:
+  - Core Modules (standalone features like authentication)
+  - User Workflows (end-to-end user journeys)
+  - Shared Components (reusable utilities and cross-cutting concerns)
+  - System Services (infrastructure and service layer components)
+
+- **Vibe Coding Workflow**: Provides a 10-step iterative development approach:
+  1. Brainstorm - Identify smallest viable feature
+  2. Scope - Define acceptance criteria
+  3. One-Shot MVP - Build minimal working version
+  4. Break Down - Decompose into testable components
+  5. Plan Per Feature - Create implementation tasks
+  6. Implement - Code with TDD and CI
+  7. Test - Verify functionality and integration
+  8. Commit - Create atomic commits
+  9. Iterate - Refine based on feedback
+  10. Scale - Apply patterns to subsequent builds
+
+- **Implementation Tips**: Practical guidance for starting small, testing first, and maintaining incremental value
+
+The guide is generated using keyword analysis of the TDD content and provides default examples when no specific components are detected. It serves as a bridge between high-level technical design and practical implementation workflow.
 
 ## Key Concepts
 

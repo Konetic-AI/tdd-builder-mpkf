@@ -121,3 +121,8 @@
 - **Glossary of Terms:** `{{appendices.glossary}}`
 - **Linked Documents & References:** `{{appendices.references}}`
 - **Architecture Decision Records (ADRs):** `{{appendices.adrs}}`
+
+---
+
+## Micro Builds Guide
+{{micro_builds}}
