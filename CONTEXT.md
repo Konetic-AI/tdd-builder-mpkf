@@ -87,6 +87,29 @@ The TDD builder appends the Micro Builds Guide after compliance/completeness rep
 
 This approach ensures modular progress, faster feedback loops, and a scalable TDD-to-build workflow.
 
+### Micro Builds Guide Output
+After compliance and completeness checks, the builder appends a standardized **Micro Builds Guide** to each TDD. This output is non-code but fundamental for planning and vibe coding workflows. The guide includes:
+
+- **A 4-row table** with fixed categories:
+  - Core Modules (Authentication, Dashboard, Billing)
+  - User Workflows (Onboarding, Data Import, Report Gen.)
+  - Shared Components (Notifications, Search, File Upload)
+  - System Services (API Layer, Integrations, Logging)
+
+- **A fixed 10-step workflow** guiding iterative, AI-assisted development:
+  1. Brainstorm & Scope - Draft concise PRD/README with features, stack, milestones
+  2. One-Shot MVP Framework - Scaffold repo (e.g., Next.js, Supabase) in Replit
+  3. Break Down into Categories - Use the table above to split the TDD into micro builds
+  4. Plan Mode per Feature - New chat per feature (auth, workflow, service). Outline 3–5 micro steps
+  5. Implement in Isolation - 20–30 min coding loops per micro build
+  6. Test & Review - Unit/integration tests per micro build. Use AI for code reviews
+  7. Commit & Integrate - Version-control each micro build with clear commit messages
+  8. Iterate with Feedback - After each feature, run end-to-end tests and refine docs
+  9. Scale to Full Build - Repeat until all categories are covered
+  10. Stage Deployments - Release core modules first, then workflows, components, and services
+
+The test runner should verify the presence of the Micro Builds Guide in generated outputs.
+
 ## Key Concepts
 
 ### Complexity Levels

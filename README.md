@@ -16,7 +16,7 @@ A powerful Node.js command-line tool that generates enterprise-grade Technical D
   - `mcp-specific` - For AI/LLM tools using Model Context Protocol (51+ required fields)
 - **Pre-TDD Validation**: Validates input data and generates targeted questions for missing information
 - **Self-Auditing**: Automatically appends Gap Analysis, Compliance, and Completeness reports
-- **Micro Builds Guide**: Every generated TDD includes a standardized breakdown into atomic micro builds, with categories, examples, and a 10-step workflow for iterative "vibe coding" development
+- **Micro Builds Guide**: Every generated TDD includes a standardized breakdown into atomic micro builds, with categories (Core Modules, User Workflows, Shared Components, System Services) and a 10-step workflow for vibe coding success
 - **Smart Caching**: Template caching with 5-minute TTL for improved performance (11ms → 0ms)
 - **ISO-8601 Date Validation**: Comprehensive date validation supporting all ISO-8601 formats with leap year and timezone support
 - **Enhanced Validation**: Robust input validation with detailed error messages and type checking
@@ -88,6 +88,15 @@ node cli.js --pdf
 node cli.js -f tests/sample_enterprise.json --pdf
 ```
 
+### Build Scripts
+Generate TDDs for specific complexity levels:
+```bash
+npm run build:simple     # Generate TDD for simple complexity
+npm run build:startup    # Generate TDD for startup complexity
+npm run build:enterprise # Generate TDD for enterprise complexity
+npm run build:mcp        # Generate TDD for MCP-specific complexity
+```
+
 ### Help
 View all available options:
 ```bash
@@ -137,6 +146,10 @@ npm run test:pdf
 | `npm run test:jest` | Run Jest test suite |
 | `npm run test:unit` | Run unit tests |
 | `npm run generate` | Start interactive mode (alias) |
+| `npm run build:simple` | Generate TDD for simple complexity |
+| `npm run build:startup` | Generate TDD for startup complexity |
+| `npm run build:enterprise` | Generate TDD for enterprise complexity |
+| `npm run build:mcp` | Generate TDD for MCP-specific complexity |
 | `node cli.js` | Start interactive mode |
 | `node cli.js -f <file>` | Generate from JSON file |
 | `node cli.js --pdf` | Generate TDD and export as PDF |
@@ -159,6 +172,9 @@ A generated TDD includes:
   - Gap Analysis Report with missing field tracking
   - MPKF Compliance Report with validation status
   - Completeness Report with orphan variable detection
+- **Micro Builds Guide** for iterative development workflow
+
+All generated TDDs now end with Compliance Report, Completeness Report, and Micro Builds Guide.
 
 ### Performance Features
 - **Template Caching**: 5-minute TTL reduces load times from 11ms to 0ms

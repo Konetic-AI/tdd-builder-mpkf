@@ -15,6 +15,7 @@
     "test:jest": "jest",
     "test:pdf": "jest tests/pdf_export.test.js",
     "build:simple": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_simple.json'), complexity:'simple'});console.log(r.status);})();\"",
+    "build:startup": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_startup.json'), complexity:'startup'});console.log(r.status);})();\"",
     "build:enterprise": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_enterprise.json'), complexity:'enterprise'});console.log(r.status);})();\"",
     "build:mcp": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_mcp.json'), complexity:'mcp-specific'});console.log(r.status);})();\""
   },
