@@ -1,0 +1,48 @@
+{
+  "mcpServers": {
+    "tdd-builder-mpkf": {
+      "command": "node",
+      "args": ["handlers/generate_tdd.js"],
+      "env": {},
+      "capabilities": {
+        "tools": true
+      }
+    }
+  },
+  "tools": {
+    "validate_and_generate_tdd": {
+      "description": "Validates project data and generates MPKF-compliant Technical Design Documents",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project_data": {
+            "type": "object",
+            "description": "Project data object containing all required fields for TDD generation"
+          },
+          "complexity": {
+            "type": "string",
+            "enum": ["simple", "enterprise", "mcp-specific"],
+            "description": "Complexity level determining TDD structure and requirements"
+          },
+          "mpkf_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "MPKF_Mapping_Document.md",
+              "MPKF_Audit_Checklist.md", 
+              "MPKF_vs_Research_Framework_Comparison.md",
+              "Deep_Research_Addendum.md",
+              "Universal_Enterprise_Grade_TDD_Template_v5.0.md",
+              "MPKF_Consolidated_MASTER.md"
+            ],
+            "description": "Array of authoritative MPKF asset filenames"
+          }
+        },
+        "required": ["project_data", "complexity"],
+        "additionalProperties": false
+      }
+    }
+  }
+}
