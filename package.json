@@ -19,6 +19,9 @@
     "build:enterprise": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_enterprise.json'), complexity:'enterprise'});console.log(r.status);})();\"",
     "build:mcp": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_mcp.json'), complexity:'mcp-specific'});console.log(r.status);})();\"",
     "build:all": "npm run build:simple && npm run build:startup && npm run build:enterprise && npm run build:mcp",
+    "validate:microbuild": "node scripts/validate_microbuild.js",
+    "validate:variables": "node scripts/validate_orphans.js",
+    "prepare": "husky",
     "autopush": "./scripts/autopush.sh",
     "replit-sync": "./scripts/replit-sync.sh"
   },
@@ -40,6 +43,8 @@
     "puppeteer": "^21.5.2"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "husky": "^9.1.0",
+    "rimraf": "^5.0.5"
   }
 }
