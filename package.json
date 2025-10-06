@@ -23,7 +23,8 @@
     "validate:variables": "node scripts/validate_orphans.js",
     "prepare": "husky",
     "autopush": "./scripts/autopush.sh",
-    "replit-sync": "./scripts/replit-sync.sh"
+    "replit-sync": "./scripts/replit-sync.sh",
+    "sync:fast": "bash scripts/sync_fast.sh"
   },
   "keywords": [
     "mcp",
