@@ -1,5 +1,6 @@
 # TDD Builder MPKF
 
+[![CI](https://github.com/Konetic-AI/tdd-builder-mpkf/actions/workflows/ci.yml/badge.svg)](https://github.com/Konetic-AI/tdd-builder-mpkf/actions/workflows/ci.yml)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](package.json)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green)](package.json)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](test_runner.js)
@@ -52,10 +53,40 @@ tdd-builder-mpkf/
 ├── test_runner.js      # Main test suite
 └── package.json        # Project configuration
 
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ (use `.nvmrc` file)
+
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/Konetic-AI/tdd-builder-mpkf.git
+cd tdd-builder-mpkf
+
+# Use Node 18 (if using nvm)
+nvm use
+
+# Install dependencies
+npm ci
+
+# Run tests
+npm test
+
+# Build all TDDs
+npm run build:all
+
+# Validate microbuilds
+npm run validate:microbuild
+
+# Validate variables
+npm run validate:variables
+```
+
 ## 🛠️ Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/tdd-builder-mpkf.git
+git clone https://github.com/Konetic-AI/tdd-builder-mpkf.git
 cd tdd-builder-mpkf
 
 # Install dependencies
@@ -209,12 +240,27 @@ This tool strictly adheres to the Master Project Knowledge File (MPKF) framework
 
 ## 🤝 Contributing
 
+### Pre-commit Checks
+Husky pre-push hook runs the same validation checks as CI:
+- Test suite execution
+- Build validation
+- Microbuild validation
+- Variable validation
+
+Initialize hooks once:
+```bash
+npx husky init
+```
+
+### Development Workflow
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Run tests to ensure everything works (`npm test`)
 4. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 5. Push to the branch (`git push origin feature/AmazingFeature`)
 6. Open a Pull Request
+
+Please refer to the PR template checklist for complete contribution guidelines.
 
 ### Development Setup
 ```bash
@@ -231,6 +277,20 @@ npm run test:pdf
 # Generate sample TDD
 npm run generate
 ```
+
+## 🔄 CI/CD Pipeline
+
+The `.github/workflows/ci.yml` workflow automatically:
+
+1. **Install** - Sets up Node.js 18 and installs dependencies
+2. **Test** - Runs complete test suite including Jest and custom tests
+3. **Build** - Generates TDDs for all complexity levels
+4. **Validate** - Runs microbuild and variable validation
+5. **Artifact Upload** - Creates `tdd-exports.zip` with all generated outputs
+
+**View Artifacts**: Go to *Actions* tab → Select workflow run → Download `tdd-exports.zip`
+
+> For the full AI-assisted development process using Cursor (GPT-5) + Claude 4.5, see [AI Hybrid Workflow](docs/AI_Hybrid_Workflow.md).
 
 ## 🔄 Git Sync Flows
 
@@ -269,6 +329,19 @@ This project is licensed under the MIT License.
 → Force-syncs with GitHub `main`, discards uncommitted changes, reinstalls deps.
 
 **Why:** Prevents "can't pull: uncommitted changes", ensures GitHub = source of truth, keeps all environments aligned.
+
+## 📦 Dependencies & Security
+
+### Automated Updates
+- **Dependabot**: Weekly npm package updates
+- **Security**: Automated vulnerability scanning
+- **Maintenance**: Run `npm audit fix` for minor vulnerability patches
+
+### Build Artifacts
+- `output/` - Generated TDD markdown files (git-ignored)
+- `exports/` - Exported text files (git-ignored)
+
+These directories are automatically created during builds and excluded from version control.
 
 ## 🙏 Acknowledgments
 

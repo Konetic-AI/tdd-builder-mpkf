@@ -87,6 +87,31 @@ The TDD builder appends the Micro Builds Guide after compliance/completeness rep
 
 This approach ensures modular progress, faster feedback loops, and a scalable TDD-to-build workflow.
 
+### Dynamic Module Breakdown Enhancement
+
+The TDD Builder now supports an optional `modules` array in JSON input files. When provided, these modules are rendered under the *Micro Builds Guide* section with:
+
+- **Custom module categorization** based on user-defined modules
+- **Integration with standard workflow** - modules are mapped to the 4-row table categories
+- **Enhanced project planning** for complex systems with specific module requirements
+- **Flexible architecture support** for microservices, monoliths, and hybrid approaches
+
+Example JSON structure:
+```json
+{
+  "projectName": "My Project",
+  "modules": [
+    "Authentication Service",
+    "User Dashboard",
+    "Payment Gateway",
+    "Notification System"
+  ],
+  // ... other fields
+}
+```
+
+This enhancement allows teams to define their specific module architecture while maintaining MPKF compliance and the standardized workflow approach.
+
 ### Micro Builds Guide Output
 After compliance and completeness checks, the builder appends a standardized **Micro Builds Guide** to each TDD. This output is non-code but fundamental for planning and vibe coding workflows. The guide includes:
 
@@ -121,11 +146,14 @@ The test runner should verify the presence of the Micro Builds Guide in generate
 
 ### MPKF Compliance
 
+**Every generated TDD includes Micro Builds Guide, Compliance Report, and Completeness Report.**
+
 The tool enforces compliance with:
 - Pre-TDD Client Questionnaire v2.0
 - Universal Enterprise-Grade TDD Template v5.0
 - Adaptive Complexity Model
 - Self-audit requirements
+- **Dynamic Module Breakdown** for enhanced project planning
 
 ### Validation Process
 
@@ -172,24 +200,30 @@ node test_runner.js      # Run tests directly
 npm run test:jest -- --verbose  # Run Jest with verbose output
 ```
 
-## Syncing (Replit ↔ Local ↔ GitHub)
+## GitHub → Cursor → Replit Sync Workflow
 
-Developers can use the `git sync` command to safely commit, pull, and push changes in one step:
+### One-command Sync (recommended)
+
+Set up a global Git alias for seamless synchronization across development environments:
+
+```bash
+git config --global alias.sync '!git add -A && git commit -m "wip(sync)" || true && git pull --rebase origin main && git push origin main'
+```
+
+After setting up the alias, simply run in any terminal (Replit shell, Cursor terminal, or VS Code terminal):
 
 ```bash
 git sync
 ```
 
-This Git alias is defined once as:
-```bash
-git config --global alias.sync '!git add -A && git commit -m "wip(sync)" || true && git pull --rebase origin main && git push origin main'
-```
+This command performs the following steps automatically:
 
-The `git sync` workflow ensures Replit, Cursor, VS Code, and GitHub all stay in sync by:
-- Adding all changes (`git add -A`)
-- Creating a work-in-progress commit (`wip(sync)`) or continuing if no changes
-- Pulling latest changes with rebase (`git pull --rebase origin main`)
-- Pushing local changes (`git push origin main`)
+1. **Stage all changes** - Adds all modified, new, and deleted files to staging
+2. **Commit with `wip(sync)`** - Creates a work-in-progress commit if there are changes
+3. **Pull with rebase** - Fetches and rebases your local branch with the remote main branch
+4. **Push to GitHub** - Pushes your synchronized changes to the remote repository
+
+✅ **Note**: This workflow keeps Replit, Cursor, and VS Code environments perfectly synchronized.
 
 ## File Organization
 Root Files:
@@ -249,6 +283,54 @@ The application implements comprehensive error handling:
 - **Memory-efficient validation** with early termination on errors
 - **Cache management utilities** for manual cache control
 
+## Verification Checklist
+
+Mirror the CI pipeline steps for local validation:
+
+### 1. Test Suite
+```bash
+npm test
+```
+- ✅ All Jest unit tests pass
+- ✅ Custom test runner validates all complexity levels
+- ✅ PDF export tests pass
+- ✅ Date validation tests pass (45+ test cases)
+
+### 2. Build Validation
+```bash
+npm run build:all
+```
+- ✅ Simple complexity TDD generated
+- ✅ Startup complexity TDD generated
+- ✅ Enterprise complexity TDD generated
+- ✅ MCP-specific complexity TDD generated
+
+### 3. Microbuild Validation
+```bash
+npm run validate:microbuild
+```
+- ✅ Micro Builds Guide present in all outputs
+- ✅ 4-row categorization table included
+- ✅ 10-step workflow documented
+- ✅ Custom modules properly integrated (if provided)
+
+### 4. Variable Validation
+```bash
+npm run validate:variables
+```
+- ✅ No orphan variables in templates
+- ✅ All required fields populated
+- ✅ ISO-8601 date validation passes
+- ✅ Input sanitization successful
+
+### 5. Artifact Generation
+- ✅ `output/` directory contains markdown files
+- ✅ `exports/` directory contains text exports
+- ✅ PDF generation works (if Puppeteer available)
+- ✅ All files properly formatted and complete
+
+This checklist ensures local development matches CI/CD pipeline validation.
+
 ## Security Considerations
 
 - **Input sanitization** to prevent script injection
@@ -260,3 +342,8 @@ The application implements comprehensive error handling:
 - **Sandboxed PDF generation** with restricted browser permissions
 - **Type validation** to prevent unexpected data types
 - **Error message sanitization** to prevent information leakage
+
+## Workflow Integration
+
+Hybrid builds leverage **Claude 4.5 (Sonnet)** for high-context reasoning and **Cursor (GPT-5)** for execution and automation.  
+See [docs/AI_Hybrid_Workflow.md](docs/AI_Hybrid_Workflow.md) for the full integration guide.
