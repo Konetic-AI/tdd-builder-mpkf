@@ -343,6 +343,30 @@ This project is licensed under the MIT License.
 
 These directories are automatically created during builds and excluded from version control.
 
+## One-Shot Workflow Prompts
+
+### Fast Sync (Commit→Push/PR→CI→Replit→Summary)
+
+```bash
+# Fast sync workflow - commit, push, and sync across environments
+git add -A
+git commit -m "wip(sync)"
+git push origin main
+```
+
+### Full Check (Tests→Build→Validators→Commit→Push/PR→Replit)
+
+```bash
+# Full validation workflow - run all checks before sync
+npm test
+npm run build:all
+npm run validate:microbuild
+npm run validate:variables
+git add -A
+git commit -m "feat: full validation sync"
+git push origin main
+```
+
 ## 🙏 Acknowledgments
 
 - MPKF Core Team for the foundational framework
