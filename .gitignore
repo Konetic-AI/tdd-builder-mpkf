@@ -131,3 +131,9 @@ dist
 
 # Replit debugger
 .breakpoints
+
+# Project-specific ignores
+output/
+exports/
+*.pdf
+.DS_Store

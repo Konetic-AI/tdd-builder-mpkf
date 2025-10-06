@@ -37,14 +37,12 @@
   "author": "MPKF Team",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "puppeteer": "^21.5.2"
+    "node": ">=18 <21"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
     "husky": "^9.1.0",
+    "jest": "^30.2.0",
+    "puppeteer": "^24.23.0",
     "rimraf": "^5.0.5"
   }
 }
