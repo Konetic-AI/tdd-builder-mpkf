@@ -19,6 +19,9 @@
     "build:enterprise": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_enterprise.json'), complexity:'enterprise'});console.log(r.status);})();\"",
     "build:mcp": "node -e \"const h=require('./handlers/generate_tdd');(async()=>{const r=await h.validate_and_generate_tdd({project_data:require('./tests/sample_mcp.json'), complexity:'mcp-specific'});console.log(r.status);})();\"",
     "build:all": "npm run build:simple && npm run build:startup && npm run build:enterprise && npm run build:mcp",
+    "validate:microbuild": "node scripts/validate_microbuild.js",
+    "validate:variables": "node scripts/validate_orphans.js",
+    "prepare": "husky",
     "autopush": "./scripts/autopush.sh",
     "replit-sync": "./scripts/replit-sync.sh"
   },
@@ -34,12 +37,12 @@
   "author": "MPKF Team",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "puppeteer": "^21.5.2"
+    "node": ">=18 <21"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "husky": "^9.1.0",
+    "jest": "^30.2.0",
+    "puppeteer": "^24.23.0",
+    "rimraf": "^5.0.5"
   }
 }

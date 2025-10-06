@@ -93,6 +93,19 @@ function validateProjectData(project_data, complexity) {
   };
 }
 
+// --- Dynamic Module Breakdown (optional) ---
+function renderDynamicModules(modules) {
+  if (!Array.isArray(modules) || modules.length === 0) return '';
+  const items = modules.map(m => {
+    const name = m?.name || 'Unnamed Module';
+    const owner = m?.owner ? ` — Owner: ${m.owner}` : '';
+    const deps = Array.isArray(m?.deps) && m.deps.length ? `\n    - Depends on: ${m.deps.join(', ')}` : '';
+    const risks = Array.isArray(m?.risks) && m.risks.length ? `\n    - Risks: ${m.risks.join(', ')}` : '';
+    return `- **${name}**${owner}\n    - Goal: ${m?.goal || 'n/a'}${deps}${risks}`;
+  }).join('\n');
+  return `\n### Dynamic Module Breakdown (auto-generated)\n${items}\n`;
+}
+
 // --- OPUS-POWERED HOOKS ---
 // In production, these would make API calls to external services.
 const opus = {
@@ -288,7 +301,8 @@ async function validate_and_generate_tdd(args) {
 
     // --- 4. Generate Micro Builds Guide ---
     const microBuildsGuide = generateMicroBuildsGuide();
-    tddOutput = tddOutput.replace(/{{micro_builds}}/g, microBuildsGuide);
+    const dynamicModules = renderDynamicModules(project_data.modules);
+    tddOutput = tddOutput.replace(/{{micro_builds}}/g, microBuildsGuide + dynamicModules);
 
     // Clean up any remaining optional tags
     tddOutput = tddOutput.replace(/{{[^}]+}}/g, '*Not Provided*');
