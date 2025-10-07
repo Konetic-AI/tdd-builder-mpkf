@@ -1,0 +1,65 @@
+{
+  "name": "TDD Builder (MPKF)",
+  "description": "End-to-end hybrid AI workflow for generating MPKF-validated Technical Design Documents (TDDs) from a brief or questionnaire. Integrates Cursor/GPT-5 automation, Claude 4.5 reasoning, GitHub CI, and Replit sync.",
+  "model": "gpt-5",
+  "files": [
+    {
+      "path": "README.md",
+      "purpose": "reference",
+      "url": "https://raw.githubusercontent.com/Konetic-AI/tdd-builder-mpkf/main/README.md"
+    },
+    {
+      "path": "CONTEXT.md",
+      "purpose": "reference",
+      "url": "https://raw.githubusercontent.com/Konetic-AI/tdd-builder-mpkf/main/CONTEXT.md"
+    },
+    {
+      "path": "AI_Hybrid_Workflow.md",
+      "purpose": "reference",
+      "url": "https://raw.githubusercontent.com/Konetic-AI/tdd-builder-mpkf/main/docs/AI_Hybrid_Workflow.md"
+    }
+  ],
+  "actions": [
+    {
+      "title": "Start New TDD",
+      "trigger": ["Start new TDD", "start new tdd", "new tdd"],
+      "prompt": "You are initializing a new MPKF Technical Design Document (TDD) build.\n\n1️⃣ Prompt the user (Alex Wilson) with the Pre-TDD Questionnaire:\n• Project name\n• Short one-line description\n• Complexity level (simple | startup | enterprise | mcp-specific)\n• Primary objective or deliverable\n• Intended runtime (web | service | mcp | hybrid)\n• Any specific integrations or compliance notes\n\n2️⃣ Once answers are given, generate a structured JSON input under:\n`inputs/<slug>.json`\n\n3️⃣ Run the following sequence to launch the build:\n```bash\nnpm run build:all\nnpm run validate:microbuild\nnpm run validate:variables\nnpm run sync:fast\n```\n\n4️⃣ Report back with:\n• ✅ Confirmation that the input JSON was saved.\n• 🔗 Links to the GitHub commit and Actions run in `Konetic-AI/tdd-builder-mpkf`.\n• 🔄 Replit sync confirmation for project `tdd-builder-mpkf`.\n\n5️⃣ Finally, suggest invoking Claude 4.5 (Sonnet) for a compliance summary and executive overview once the build completes.\n\nAlways use the MPKF TDD Builder repo as the compliance source of truth.\n",
+      "output_handling": {
+        "show_message": true,
+        "include_links": true
+      }
+    }
+  ],
+  "integrations": {
+    "github": {
+      "enabled": true,
+      "repos": [
+        "Konetic-AI/tdd-builder-mpkf",
+        "Konetic-AI/tdd-onboarding-website"
+      ]
+    },
+    "replit": {
+      "enabled": true,
+      "projects": ["tdd-builder-mpkf"]
+    },
+    "anthropic": {
+      "enabled": true,
+      "model": "claude-4.5-sonnet",
+      "purpose": "extended reasoning and compliance validation"
+    }
+  },
+  "environment": {
+    "node": "18",
+    "npm_scripts": {
+      "sync:fast": "bash scripts/sync_fast.sh",
+      "build:all": "npm run build:simple && npm run build:startup && npm run build:enterprise && npm run build:mcp",
+      "validate:microbuild": "node scripts/validate_microbuild.js",
+      "validate:variables": "node scripts/validate_orphans.js"
+    }
+  },
+  "metadata": {
+    "maintainer": "alex@koneticai.com",
+    "created_with": "GPT-5 + Claude 4.5 hybrid",
+    "mpkf_compliant": true
+  }
+}

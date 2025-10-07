@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pre-TDD Client Questionnaire v2.0",
+  "description": "Defines the structure for the initial project data input for the TDD Builder.",
+  "type": "object",
+  "required": [
+    "project_name",
+    "executive_summary",
+    "stakeholders_and_personas",
+    "quality_goals",
+    "constraints"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "The official name of the project."
+    },
+    "executive_summary": {
+      "type": "object",
+      "required": ["problem", "solution"],
+      "properties": {
+        "problem": {
+          "type": "string",
+          "description": "A clear, concise statement of the problem this project solves."
+        },
+        "solution": {
+          "type": "string",
+          "description": "A high-level overview of the proposed solution."
+        }
+      }
+    },
+    "stakeholders_and_personas": {
+      "type": "array",
+      "description": "A list of key stakeholders and user personas involved in the project.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["Alex Wilson", "Project Manager", "Lead Developer/Architect", "Security & Compliance Officer", "User"] },
+          "description": { "type": "string" }
+        },
+        "required": ["name", "role"]
+      }
+    },
+    "quality_goals": {
+      "type": "array",
+      "description": "Top 3-5 non-functional requirements or quality attributes (e.g., performance, reliability).",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Known technical, business, or regulatory constraints.",
+      "items": { "type": "string" }
+    },
+    "c4_level_1_description": {
+        "type": "string",
+        "description": "A brief description of the system for the C4 context diagram."
+    }
+  }
+}

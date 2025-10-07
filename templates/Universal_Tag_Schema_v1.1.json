@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Universal Tag Schema v1.1",
+  "description": "Defines a universal structure for tagging requirements, decisions, risks, or other project artifacts.",
+  "type": "object",
+  "required": [
+    "tag_id",
+    "category",
+    "description"
+  ],
+  "properties": {
+    "tag_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[0-9]{3,}$",
+      "description": "A unique identifier for the tag (e.g., REQ-001, RISK-002)."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "requirement",
+        "decision",
+        "risk",
+        "constraint",
+        "assumption",
+        "security",
+        "performance"
+      ],
+      "description": "The classification of the tagged item."
+    },
+    "description": {
+      "type": "string",
+      "description": "A concise description of the item being tagged."
+    },
+    "source": {
+      "type": "string",
+      "description": "The document or meeting where this item originated."
+    },
+    "status": {
+        "type": "string",
+        "enum": ["proposed", "accepted", "deprecated", "implemented"],
+        "default": "proposed"
+    }
+  }
+}
