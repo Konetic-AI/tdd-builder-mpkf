@@ -1095,6 +1095,9 @@ async function main() {
   // Display banner (shows current mode)
   displayBanner();
 
+  // Declare telemetry at function scope so it's accessible in catch block
+  let telemetry = null;
+
   try {
     // Validate feature flags before proceeding
     try {
@@ -1111,7 +1114,7 @@ async function main() {
       process.exit(0);
     }
 
-    let project_data, complexity, telemetry = null;
+    let project_data, complexity;
     const isInteractive = !options.noninteractive;
 
     // Display aggregate insights if telemetry is enabled
