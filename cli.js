@@ -1038,13 +1038,27 @@ function parseArgs(args) {
       const complexityValue = args[++i];
       const validComplexities = ['base', 'minimal', 'standard', 'comprehensive', 'enterprise', 'auto'];
       
-      if (!validComplexities.includes(complexityValue)) {
-        console.log(`${colors.red}Error: Invalid complexity level '${complexityValue}'${colors.reset}`);
-        console.log(`${colors.yellow}Valid options: ${validComplexities.join(', ')}${colors.reset}\n`);
+      // Legacy complexity mapping
+      const legacyMap = {
+        'simple': 'base',
+        'startup': 'standard',
+        'mcp-specific': 'comprehensive',
+        'mcp': 'comprehensive'
+      };
+      
+      // Check if it's a legacy value
+      if (legacyMap[complexityValue]) {
+        const newValue = legacyMap[complexityValue];
+        console.error(`${colors.yellow}⚠️  Deprecation Notice: '${complexityValue}' is deprecated, mapping to '${newValue}'${colors.reset}`);
+        options.complexity = newValue;
+      } else if (validComplexities.includes(complexityValue)) {
+        options.complexity = complexityValue;
+      } else {
+        console.error(`${colors.red}Invalid complexity level${colors.reset}`);
+        console.error(`${colors.yellow}Valid options: ${validComplexities.join(', ')}${colors.reset}`);
+        console.error(`${colors.dim}Legacy values (deprecated): ${Object.keys(legacyMap).join(', ')}${colors.reset}\n`);
         process.exit(1);
       }
-      
-      options.complexity = complexityValue;
     } else if (arg === '--pdf') {
       options.pdf = true;
     } else if (arg === '--template') {
