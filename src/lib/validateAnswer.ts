@@ -1,7 +1,17 @@
 import Ajv, { ValidateFunction } from 'ajv';
 import { Question } from './schemaLoader';
+import { validateISODate } from '../validation/iso';
 
 const ajv = new Ajv({ allErrors: true });
+
+// Add custom format for ISO-8601 date validation using Luxon
+ajv.addFormat('date-time', {
+  validate: (dateString: string) => validateISODate(dateString)
+});
+
+ajv.addFormat('date', {
+  validate: (dateString: string) => validateISODate(dateString)
+});
 
 export interface ValidationResult {
   valid: boolean;
