@@ -6,9 +6,18 @@ on:
   pull_request:
     branches: [ "*" ]
 
+env:
+  SCHEMA_DRIVEN_ONBOARDING: false
+  EXPORT_PATH: ./exports
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        schema_mode: [false, true]
+    env:
+      SCHEMA_DRIVEN_ONBOARDING: ${{ matrix.schema_mode }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,6 +30,9 @@ jobs:
 
       - name: Install
         run: npm ci
+      
+      - name: Build TypeScript
+        run: npm run build
 
       - name: Lint (if available)
         run: |
@@ -30,25 +42,20 @@ jobs:
             echo "No lint script, skipping."
           fi
 
-      - name: Build TypeScript modules
-        run: npm run build
-
       - name: Run Jest tests with coverage
         run: npm run test:jest -- --coverage --ci
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: true
 
       - name: Check coverage thresholds
         run: |
           echo "Checking coverage for src/lib..."
           npm run test:jest -- --coverage --collectCoverageFrom='src/lib/**/*.ts' --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}' --ci
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: true
 
-      - name: Upload coverage reports
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         if: always()
+        continue-on-error: true
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
@@ -56,52 +63,31 @@ jobs:
 
       - name: Comment coverage on PR
         uses: romeovs/lcov-reporter-action@v0.3.1
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.schema_mode == false
+        continue-on-error: true
         with:
           lcov-file: ./coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
           delete-old-comments: true
 
-      - name: Run unit & integration tests (Legacy Mode)
+      - name: Run unit & integration tests
         run: npm test --silent
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: false
 
-      - name: Run unit & integration tests (Schema-Driven Mode)
-        run: npm test --silent
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: true
-
-      - name: Build all targets (Legacy Mode)
+      - name: Build all targets
         run: npm run build:all
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: false
-
-      - name: Build all targets (Schema-Driven Mode)
-        run: npm run build:all
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: true
 
       - name: Validate Micro Builds Guide present
         run: npm run validate:microbuild
 
-      - name: Validate no orphan template variables (Legacy Mode)
+      - name: Validate no orphan template variables
         run: npm run validate:variables
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: false
-
-      - name: Validate no orphan template variables (Schema-Driven Mode)
-        run: npm run validate:variables
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: true
 
       - name: Test CLI with --legacy flag
+        if: matrix.schema_mode == false
         run: node cli.js --legacy --noninteractive tests/sample_mcp.json
       
-      - name: Test CLI with schema mode
+      - name: Test CLI in current mode
         run: node cli.js --noninteractive tests/sample_mcp.json
-        env:
-          SCHEMA_DRIVEN_ONBOARDING: true
 
       - name: Upload exports as artifact
         if: always()
