@@ -6,6 +6,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // Test timeout for CLI operations (10 seconds)
 jest.setTimeout(10000);
@@ -13,6 +14,7 @@ jest.setTimeout(10000);
 describe('CLI End-to-End Tests', () => {
   const outputDir = path.join(__dirname, '..', 'output');
   const exportsDir = path.join(__dirname, '..', 'exports');
+  const testTempDir = path.join(os.tmpdir(), 'tdd-builder-mpkf-tests');
   
   // Helper to execute CLI command
   const runCLI = (args, options = {}) => {
@@ -63,10 +65,13 @@ describe('CLI End-to-End Tests', () => {
   };
 
   describe('Base Complexity Level', () => {
-    const testFile = path.join(__dirname, 'sample_base.json');
+    const testFile = path.join(testTempDir, 'sample_base.json');
     const outputFile = path.join(outputDir, 'test_base_project_tdd.md');
 
     beforeAll(() => {
+      // Ensure temp directory exists
+      fs.mkdirSync(testTempDir, { recursive: true });
+      
       // Create a minimal test file for base complexity
       const baseData = {
         'project.name': 'Test Base Project',
@@ -479,7 +484,7 @@ describe('CLI End-to-End Tests', () => {
     });
 
     it('should handle invalid JSON in input file', () => {
-      const invalidFile = path.join(__dirname, 'invalid.json');
+      const invalidFile = path.join(testTempDir, 'invalid.json');
       fs.writeFileSync(invalidFile, '{ invalid json }');
 
       try {
