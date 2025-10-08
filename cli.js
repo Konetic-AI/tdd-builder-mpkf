@@ -49,12 +49,13 @@ function loadSchemaModules() {
 // Import review screen module
 const reviewScreen = require('./src/lib/reviewScreen');
 
-// Import telemetry module
-const { 
-  isTelemetryEnabled, 
-  TelemetrySession, 
-  displayAggregateInsights 
-} = require('./src/lib/telemetry');
+// Import telemetry module (optional - guard against missing module)
+let telemetryApi = null;
+try {
+  telemetryApi = require('./src/lib/telemetry');
+} catch (error) {
+  // Telemetry module not available - continue without it
+}
 
 // CLI colors
 const colors = {
@@ -576,8 +577,10 @@ async function runDeepDiveStage(schema, tagSchema, answers, options = {}, teleme
 async function interactiveMode(options = {}) {
   console.log(`${colors.green}${colors.bold}Starting 3-Stage Interview${colors.reset}\n`);
   
-  // Initialize telemetry session
-  const telemetry = isTelemetryEnabled() ? new TelemetrySession() : null;
+  // Initialize telemetry session (only if API is available and enabled)
+  const telemetry = (telemetryApi && telemetryApi.isTelemetryEnabled && telemetryApi.isTelemetryEnabled()) 
+    ? new telemetryApi.TelemetrySession() 
+    : null;
   
   if (telemetry) {
     console.log(`${colors.dim}📊 Telemetry enabled - collecting anonymized usage metrics${colors.reset}\n`);
@@ -1114,8 +1117,8 @@ async function main() {
     const isInteractive = !options.noninteractive;
 
     // Display aggregate insights if telemetry is enabled
-    if (isTelemetryEnabled() && isInteractive) {
-      await displayAggregateInsights(colors);
+    if (telemetryApi && telemetryApi.isTelemetryEnabled && telemetryApi.isTelemetryEnabled() && isInteractive) {
+      await telemetryApi.displayAggregateInsights(colors);
     }
 
     // Non-interactive mode
