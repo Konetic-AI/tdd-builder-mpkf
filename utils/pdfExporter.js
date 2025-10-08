@@ -42,7 +42,7 @@ class PDFExporter {
       this.isInitialized = true;
     } catch (error) {
       // Puppeteer is optional - fall back to text export without failing
-      console.warn('Puppeteer not available - using text export fallback');
+      console.warn('PDF exporter: Puppeteer not available; using text export fallback.');
       this.isInitialized = false;
     }
   }

@@ -307,7 +307,7 @@ code block
       
       await pdfExporter.initialize();
       
-      expect(consoleSpy).toHaveBeenCalledWith('Puppeteer not available - using text export fallback');
+      expect(consoleSpy).toHaveBeenCalledWith('PDF exporter: Puppeteer not available; using text export fallback.');
       expect(pdfExporter.isInitialized).toBe(false);
       
       consoleSpy.mockRestore();
