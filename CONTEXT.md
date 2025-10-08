@@ -347,3 +347,50 @@ This checklist ensures local development matches CI/CD pipeline validation.
 
 Hybrid builds leverage **Claude 4.5 (Sonnet)** for high-context reasoning and **Cursor (GPT-5)** for execution and automation.  
 See [docs/AI_Hybrid_Workflow.md](docs/AI_Hybrid_Workflow.md) for the full integration guide.
+
+## CI Troubleshooting
+
+### Environment Variables
+
+#### `EXPORT_PATH` (default: `./exports`)
+- Configurable directory for PDF and text exports
+- System creates directory if it doesn't exist
+- Must be writable; CI uses `./exports` for consistency
+
+#### `SCHEMA_DRIVEN_ONBOARDING` (default: `false`)
+- Enables schema-driven questionnaire mode
+- When `true`: TypeScript must be built first (`npm run build`)
+- CI tests both `true` and `false` modes for compatibility
+
+### Optional Dependencies
+
+#### Puppeteer (PDF Generation)
+- Optional: Falls back to text export if unavailable
+- Warning logged on fallback (not an error)
+- Tests pass regardless of installation status
+
+### Codecov Integration
+- Requires `CODECOV_TOKEN` secret in repository settings
+- Step continues without failing if token absent
+- Add token at: GitHub repo → Settings → Secrets → Actions
+
+### Date Validation (Luxon)
+- Uses `luxon` for robust ISO-8601 parsing
+- Supports positive/negative timezone offsets (`±HH:mm`)
+- Validates both format and logical correctness
+
+### Common Failures
+
+**"Cannot find module 'dist/src/lib/...'"**
+- Cause: TypeScript not compiled with `SCHEMA_DRIVEN_ONBOARDING=true`
+- Fix: Run `npm run build` before tests
+
+**"ENOENT" or "EACCES" errors**
+- Cause: Missing or protected directories
+- Fix: Use `EXPORT_PATH`, `os.tmpdir()`, and `mkdir -p`
+
+**"Invalid complexity level"**
+- Cause: Using deprecated values (`simple`, `startup`, `mcp-specific`)
+- Fix: Use new levels (`base`, `minimal`, `standard`, `comprehensive`, `enterprise`) or CLI legacy mapping
+
+See [README.md#ci-troubleshooting](README.md#ci-troubleshooting) for detailed solutions.

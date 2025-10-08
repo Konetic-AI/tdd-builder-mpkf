@@ -1487,6 +1487,102 @@ if grep -q '"replit-sync"' package.json 2>/dev/null; then
 fi
 ```
 
+## CI Troubleshooting
+
+### Environment Variables
+
+The CI workflow uses the following environment variables that affect test behavior:
+
+#### `EXPORT_PATH`
+- **Purpose**: Configurable directory for PDF and text exports
+- **Default**: `./exports` (relative to project root)
+- **Usage**: Set to a writable directory path. The system will create it if it doesn't exist.
+- **CI Setting**: Set to `./exports` in workflow to ensure consistent, safe paths
+- **Example**: `EXPORT_PATH=/tmp/tdd-exports npm test`
+
+#### `SCHEMA_DRIVEN_ONBOARDING`
+- **Purpose**: Enable or disable schema-driven questionnaire mode
+- **Values**: `true` | `false`
+- **Default**: `false` (legacy mode)
+- **CI Setting**: CI runs tests in **both** modes to ensure compatibility
+- **Build Requirement**: When `true`, TypeScript must be compiled before running tests
+  - Run `npm run build` first
+  - Ensures `dist/` artifacts exist for schema modules
+- **Example**: `SCHEMA_DRIVEN_ONBOARDING=true npm run build && npm test`
+
+### Optional Dependencies
+
+#### Puppeteer (PDF Generation)
+- **Status**: Optional - system gracefully falls back to text export if unavailable
+- **Behavior**: 
+  - If Puppeteer is installed: Generates rich PDF documents
+  - If Puppeteer is missing: Falls back to formatted text export (`.txt`)
+  - Logs a one-line warning on fallback (not an error)
+- **CI Impact**: Tests pass regardless of Puppeteer availability
+- **Install**: `npm install puppeteer --save-dev` (optional)
+
+### Codecov Integration
+
+#### Coverage Upload
+- **Token**: Requires `CODECOV_TOKEN` secret in GitHub repository settings
+- **Behavior**: 
+  - If token present: Uploads coverage reports to Codecov
+  - If token absent: Step continues with warning (does not fail CI)
+- **Setup**: Add `CODECOV_TOKEN` to repository secrets at:
+  - GitHub repo → Settings → Secrets and variables → Actions → New secret
+  - Get token from https://codecov.io/
+
+### Date Validation
+
+#### Luxon-based ISO-8601 Parsing
+- **Library**: Uses `luxon` for robust date validation
+- **Supported Formats**:
+  - `YYYY-MM-DD` (date only)
+  - `YYYY-MM-DDTHH:mm:ss` (datetime)
+  - `YYYY-MM-DDTHH:mm:ss.sssZ` (UTC)
+  - `YYYY-MM-DDTHH:mm:ss±HH:mm` (positive/negative timezone offsets)
+- **Validation**: Ensures both format correctness and logical validity (e.g., rejects 2025-13-45)
+- **Upgrade**: Replaced regex-based validation for better timezone support
+
+### Common CI Issues
+
+#### Issue: "Cannot find module 'dist/src/lib/...'"
+**Cause**: TypeScript not compiled before tests when `SCHEMA_DRIVEN_ONBOARDING=true`
+**Solution**: Ensure `npm run build` runs before tests in CI
+```yaml
+- name: Build TypeScript
+  run: npm run build
+- name: Run tests
+  run: npm test
+  env:
+    SCHEMA_DRIVEN_ONBOARDING: true
+```
+
+#### Issue: "ENOENT: no such file or directory" or "EACCES: permission denied"
+**Cause**: Test trying to write to non-existent or protected directory
+**Solution**: 
+- Use `EXPORT_PATH` environment variable for exports
+- Tests should use `os.tmpdir()` or Jest temp directories
+- Always `mkdir -p` before writing files
+
+#### Issue: "Invalid complexity level"
+**Cause**: Using deprecated complexity values
+**Solution**: Use new graduated levels or enable legacy mapping
+- **New levels**: `base`, `minimal`, `standard`, `comprehensive`, `enterprise`
+- **Legacy mapping**: `simple` → `base`, `startup` → `standard`, `mcp-specific` → `comprehensive`
+- CLI provides deprecation notices for legacy values
+
+#### Issue: Codecov step fails
+**Cause**: `CODECOV_TOKEN` not configured
+**Solution**: Either add token or mark step as `continue-on-error: true`
+```yaml
+- name: Upload coverage to Codecov
+  uses: codecov/codecov-action@v4
+  continue-on-error: true
+  with:
+    token: ${{ secrets.CODECOV_TOKEN }}
+```
+
 ## 🙏 Acknowledgments
 
 - MPKF Core Team for the foundational framework
@@ -1494,3 +1590,4 @@ fi
 - Model Context Protocol community
 - Puppeteer team for PDF generation capabilities
 - Jest team for comprehensive testing framework
+- Luxon team for robust date/time handling
