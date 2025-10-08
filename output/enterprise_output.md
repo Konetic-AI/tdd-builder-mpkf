@@ -298,6 +298,6 @@ This approach ensures modular progress, faster feedback loops, and a scalable TD
 | Check | Status | Details |
 |:---|:---|:---|
 | Orphan Variables | ✅ Passed | No orphan variable tags remain in the final document. |
-| Required Sections | ✅ Passed | All 9 stages sections present per complexity level. |
+| Required Sections | ✅ Passed | All 9 full stages (+ risks, compliance) sections present per complexity level. |
 | Diagram Generation | ✅ Passed | Diagram placeholders populated with PlantUML. |
 | Document Structure | ✅ Passed | Document maintains valid Markdown structure and MPKF template integrity. |

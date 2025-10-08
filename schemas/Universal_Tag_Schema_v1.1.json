@@ -1,0 +1,202 @@
+{
+  "version": "1.1",
+  "tags": {
+    "foundation": { 
+      "label": "Project Foundation",
+      "description": "Core project information and setup"
+    },
+    "architecture": { 
+      "label": "Architecture & Design",
+      "description": "System architecture and design decisions"
+    },
+    "security": { 
+      "label": "Security & Compliance",
+      "description": "Security controls and compliance requirements"
+    },
+    "operations": { 
+      "label": "Operations & SRE",
+      "description": "Operational concerns, monitoring, and reliability"
+    },
+    "privacy": { 
+      "label": "Privacy & Data",
+      "description": "Data privacy and protection requirements"
+    },
+    "compliance": {
+      "label": "Compliance & Regulatory",
+      "description": "Regulatory compliance and legal requirements"
+    },
+    "risks": {
+      "label": "Risks & Technical Debt",
+      "description": "Risk management and technical debt tracking"
+    },
+    "implementation": {
+      "label": "Implementation & Delivery",
+      "description": "Development methodology and implementation planning"
+    }
+  },
+  "field_metadata": {
+    "doc.version": {
+      "tags": ["foundation"],
+      "related_fields": ["project.name"],
+      "complexity_levels": ["base", "minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "project.name": {
+      "tags": ["foundation"],
+      "related_fields": ["doc.version", "summary.problem"],
+      "complexity_levels": ["base", "minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "summary.problem": {
+      "tags": ["foundation"],
+      "related_fields": ["project.name", "summary.solution"],
+      "complexity_levels": ["base", "minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "summary.solution": {
+      "tags": ["foundation"],
+      "related_fields": ["summary.problem"],
+      "complexity_levels": ["base", "minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "project.description": {
+      "tags": ["foundation"],
+      "related_fields": ["project.name", "summary.problem"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "security.auth": {
+      "tags": ["security"],
+      "related_fields": ["security.controls", "privacy.controls"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "security.controls": {
+      "tags": ["security"],
+      "related_fields": ["security.auth", "privacy.controls"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "privacy.pii": {
+      "tags": ["privacy", "security"],
+      "related_fields": ["privacy.controls", "privacy.regulations"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 3
+    },
+    "privacy.controls": {
+      "tags": ["privacy"],
+      "related_fields": ["privacy.pii", "privacy.regulations", "security.controls"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "privacy.regulations": {
+      "tags": ["privacy", "security"],
+      "related_fields": ["privacy.pii", "privacy.controls"],
+      "complexity_levels": ["comprehensive", "enterprise"],
+      "weight": 3
+    },
+    "deployment.model": {
+      "tags": ["architecture", "operations"],
+      "related_fields": ["cloud.provider", "cloud.regions", "datacenter.location"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "cloud.provider": {
+      "tags": ["architecture", "operations"],
+      "related_fields": ["deployment.model", "cloud.regions"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "cloud.regions": {
+      "tags": ["architecture", "operations"],
+      "related_fields": ["deployment.model", "cloud.provider"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "datacenter.location": {
+      "tags": ["architecture", "operations"],
+      "related_fields": ["deployment.model"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "operations.monitoring": {
+      "tags": ["operations"],
+      "related_fields": ["operations.sla"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "operations.sla": {
+      "tags": ["operations"],
+      "related_fields": ["operations.monitoring", "architecture.scale"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "architecture.scale": {
+      "tags": ["architecture", "operations"],
+      "related_fields": ["operations.sla", "deployment.model"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "project.industry": {
+      "tags": ["foundation", "compliance"],
+      "related_fields": ["privacy.regulations", "constraints.compliance"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "architecture.multitenancy": {
+      "tags": ["architecture", "security"],
+      "related_fields": ["deployment.model", "security.controls"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "constraints.compliance": {
+      "tags": ["compliance", "security"],
+      "related_fields": ["privacy.regulations", "project.industry"],
+      "complexity_levels": ["comprehensive", "enterprise"],
+      "weight": 3
+    },
+    "risks.technical": {
+      "tags": ["risks"],
+      "related_fields": ["risks.mitigation", "risks.business"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "risks.business": {
+      "tags": ["risks"],
+      "related_fields": ["risks.technical", "risks.mitigation"],
+      "complexity_levels": ["comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "risks.mitigation": {
+      "tags": ["risks"],
+      "related_fields": ["risks.technical", "risks.business"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "implementation.methodology": {
+      "tags": ["implementation"],
+      "related_fields": ["implementation.team", "implementation.roadmap"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "implementation.team": {
+      "tags": ["implementation"],
+      "related_fields": ["implementation.methodology"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 1
+    },
+    "implementation.roadmap": {
+      "tags": ["implementation"],
+      "related_fields": ["implementation.methodology", "implementation.testing_strategy"],
+      "complexity_levels": ["minimal", "standard", "comprehensive", "enterprise"],
+      "weight": 2
+    },
+    "implementation.testing_strategy": {
+      "tags": ["implementation", "operations"],
+      "related_fields": ["implementation.roadmap"],
+      "complexity_levels": ["standard", "comprehensive", "enterprise"],
+      "weight": 2
+    }
+  }
+}
+

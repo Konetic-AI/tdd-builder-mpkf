@@ -137,3 +137,6 @@ output/
 exports/
 *.pdf
 .DS_Store
+
+# Telemetry data (privacy-safe analytics)
+.telemetry/

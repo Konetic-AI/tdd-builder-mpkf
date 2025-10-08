@@ -30,17 +30,78 @@ jobs:
             echo "No lint script, skipping."
           fi
 
-      - name: Run unit & integration tests
-        run: npm test --silent
+      - name: Build TypeScript modules
+        run: npm run build
 
-      - name: Build all targets
+      - name: Run Jest tests with coverage
+        run: npm run test:jest -- --coverage --ci
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: true
+
+      - name: Check coverage thresholds
+        run: |
+          echo "Checking coverage for src/lib..."
+          npm run test:jest -- --coverage --collectCoverageFrom='src/lib/**/*.ts' --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}' --ci
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Comment coverage on PR
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        if: github.event_name == 'pull_request'
+        with:
+          lcov-file: ./coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          delete-old-comments: true
+
+      - name: Run unit & integration tests (Legacy Mode)
+        run: npm test --silent
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: false
+
+      - name: Run unit & integration tests (Schema-Driven Mode)
+        run: npm test --silent
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: true
+
+      - name: Build all targets (Legacy Mode)
         run: npm run build:all
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: false
+
+      - name: Build all targets (Schema-Driven Mode)
+        run: npm run build:all
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: true
 
       - name: Validate Micro Builds Guide present
         run: npm run validate:microbuild
 
-      - name: Validate no orphan template variables
+      - name: Validate no orphan template variables (Legacy Mode)
         run: npm run validate:variables
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: false
+
+      - name: Validate no orphan template variables (Schema-Driven Mode)
+        run: npm run validate:variables
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: true
+
+      - name: Test CLI with --legacy flag
+        run: node cli.js --legacy --noninteractive tests/sample_mcp.json
+      
+      - name: Test CLI with schema mode
+        run: node cli.js --noninteractive tests/sample_mcp.json
+        env:
+          SCHEMA_DRIVEN_ONBOARDING: true
 
       - name: Upload exports as artifact
         if: always()

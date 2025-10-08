@@ -10,8 +10,7 @@ import {
   validateDateFields,
   getSupportedFormats,
   isFormatSupported,
-  ISO8601_FORMATS,
-  DateValidationResult
+  ISO8601_FORMATS
 } from './date';
 
 describe('ISO-8601 Date Validation', () => {

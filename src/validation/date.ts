@@ -246,14 +246,16 @@ export function validateIS8601Date(dateString: string): DateValidationResult {
       case ISO8601_FORMATS.DATETIME_TZ: {
         const match = dateString.match(ISO8601_PATTERNS.DATETIME_TZ);
         if (!match) throw new Error('Failed to parse datetime with timezone');
-        [, year, month, day, hour, minute, second, timezoneSign, timezoneHours, timezoneMinutes] = match.map(Number);
+        timezoneSign = match[7];
+        [, year, month, day, hour, minute, second, , timezoneHours, timezoneMinutes] = match.map(Number);
         break;
       }
       
       case ISO8601_FORMATS.DATETIME_MS_TZ: {
         const match = dateString.match(ISO8601_PATTERNS.DATETIME_MS_TZ);
         if (!match) throw new Error('Failed to parse datetime with milliseconds and timezone');
-        [, year, month, day, hour, minute, second, milliseconds, timezoneSign, timezoneHours, timezoneMinutes] = match.map(Number);
+        timezoneSign = match[8];
+        [, year, month, day, hour, minute, second, milliseconds, , timezoneHours, timezoneMinutes] = match.map(Number);
         break;
       }
       

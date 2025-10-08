@@ -11,6 +11,36 @@ const fs = require('fs').promises;
 const path = require('path');
 const { validateIS8601Date, validateDateFields } = require('../src/validation/date');
 
+// Import feature flags
+let featureFlagsModule;
+try {
+  featureFlagsModule = require('../dist/src/lib/featureFlags');
+} catch (error) {
+  // If feature flags module isn't available, default to legacy mode
+  featureFlagsModule = {
+    isSchemaOnboardingEnabled: () => false,
+    canUseSchemaMode: () => false
+  };
+}
+
+const { isSchemaOnboardingEnabled, canUseSchemaMode } = featureFlagsModule;
+
+// Import the new TypeScript-based question system
+let generateTddModule;
+
+function loadGenerateTddModule() {
+  if (!generateTddModule && isSchemaOnboardingEnabled() && canUseSchemaMode()) {
+    try {
+      // Try to load the compiled TypeScript module
+      generateTddModule = require('../dist/src/handlers/generateTdd');
+    } catch (error) {
+      console.warn('Warning: TypeScript module not available, falling back to hardcoded questions');
+      generateTddModule = null;
+    }
+  }
+  return generateTddModule;
+}
+
 // --- TEMPLATE CACHE ---
 // Caching mechanism to avoid reading the template file on every invocation
 let templateCache = null;
@@ -49,7 +79,11 @@ function validateProjectData(project_data, complexity) {
     return { valid: false, errors };
   }
 
-  const validComplexities = ['simple', 'startup', 'enterprise', 'mcp-specific', 'mcp'];
+  // Support both old and new complexity levels
+  const validComplexities = [
+    'simple', 'startup', 'enterprise', 'mcp-specific', 'mcp',  // Old levels (legacy)
+    'base', 'minimal', 'standard', 'comprehensive', 'enterprise'  // New graduated levels
+  ];
   if (!validComplexities.includes(complexity)) {
     errors.push(`complexity must be one of: ${validComplexities.join(', ')}`);
   }
@@ -198,7 +232,7 @@ paths:
  * @returns {object} - The result of the operation.
  */
 async function validate_and_generate_tdd(args) {
-  const { project_data, complexity, mpkf_files = [] } = args;
+  const { project_data, complexity, mpkf_files = [], allowIncomplete = false } = args;
 
   try {
     // --- 0. Input Validation Phase ---
@@ -214,6 +248,12 @@ async function validate_and_generate_tdd(args) {
     // --- 1. MPKF Interrogation Phase ---
     const template = await loadTemplate();
     const master_reqs = getMpkfRequirements(complexity);
+    
+    // Log which mode we're using
+    const mode = isSchemaOnboardingEnabled() ? 'schema-driven' : 'legacy';
+    if (process.env.DEBUG) {
+      console.log(`[DEBUG] Using ${mode} mode for TDD generation`);
+    }
 
     // --- 2. Intake Validation (Pre-TDD Gating) ---
     const missingFields = [];
@@ -226,7 +266,7 @@ async function validate_and_generate_tdd(args) {
       }
     }
 
-    if (missingFields.length > 0) {
+    if (missingFields.length > 0 && !allowIncomplete) {
       return {
         status: "incomplete",
         missing_fields: missingFields.map(f => f.field),
@@ -238,6 +278,9 @@ async function validate_and_generate_tdd(args) {
         rationale: `The project_data is missing ${missingFields.length} mandatory field(s) required for the '${complexity}' complexity level. Please answer the adhoc_questions and resubmit.`
       };
     }
+    
+    // Track if we're generating with missing fields
+    const hasIncompleteData = missingFields.length > 0;
 
     // --- 3. Generation Phase ---
     let tddOutput = template;
@@ -317,8 +360,9 @@ async function validate_and_generate_tdd(args) {
       "\n\n---\n\n" + auditReports.completenessReport;
 
     return {
-      status: "complete",
+      status: hasIncompleteData ? "incomplete" : "complete",
       tdd: finalOutput,
+      missing_fields: hasIncompleteData ? missingFields.map(f => f.field) : [],
       metadata: {
         complexity: complexity,
         total_fields: Object.keys(master_reqs.required_fields).length,
@@ -518,17 +562,79 @@ function getEmbeddedTemplate() {
 
 /**
  * Derives the canonical requirements from the MPKF based on complexity.
+ * Now uses schema-based approach with fallback to hardcoded questions.
  * Based on Pre-TDD Client Questionnaire v2.0 from MPKF.
  */
 function getMpkfRequirements(complexity) {
+  // Try to use the new schema-based approach if feature flag is enabled
+  if (isSchemaOnboardingEnabled()) {
+    const module = loadGenerateTddModule();
+    if (module && module.getMpkfRequirements) {
+      try {
+        return module.getMpkfRequirements(complexity);
+      } catch (error) {
+        console.warn(`Warning: Schema-based requirements failed, falling back to hardcoded: ${error.message}`);
+      }
+    }
+  }
+
+  // Fallback to hardcoded requirements (legacy mode)
+  
+  // Base level: Absolute minimum (4 fields)
   const base_reqs = {
     'doc.version': 'What is the TDD version?',
     'project.name': 'What is the official name for this project?',
     'summary.problem': 'In one or two sentences, what is the core problem this project solves?',
     'summary.solution': 'Describe the solution you envision at a high level.'
   };
+  
+  // Minimal level: Core essentials (8-10 fields)
+  const minimal_reqs = {
+    ...base_reqs,
+    'doc.created_date': 'What is the creation date for this TDD?',
+    'doc.authors': 'Who are the authors of this TDD?',
+    'context.scope_in': 'What features are in scope for this project?',
+    'architecture.style': 'What is your architectural approach?',
+    'architecture.tech_stack': 'What is your technology stack?'
+  };
 
-  // Startup complexity: Lean, MVP-focused requirements for early-stage products
+  // Standard level: Typical project with moderate complexity (15-20 fields)
+  const standard_reqs = {
+    ...minimal_reqs,
+    'summary.key_decisions': 'What are the key architectural decisions?',
+    'context.business_goals': 'What are the primary business goals?',
+    'context.scope_out': 'What features are explicitly out of scope?',
+    'context.personas': 'Who are the key user personas?',
+    'constraints.technical': 'What are the technical constraints?',
+    'architecture.c4_l1_description': 'Provide a high-level system context description.',
+    'nfr.performance': 'What are your performance expectations?',
+    'nfr.scalability': 'What are your scalability requirements?',
+    'security.auth': 'What is your authentication approach?',
+    'ops.deployment_strategy': 'What is your deployment strategy?',
+    'implementation.methodology': 'What is your development methodology?'
+  };
+  
+  // Comprehensive level: Complex project with extensive requirements (25-30 fields)
+  const comprehensive_reqs = {
+    ...standard_reqs,
+    'doc.stakeholders': 'Who are the primary stakeholders?',
+    'summary.success_criteria': 'What are the success criteria?',
+    'constraints.business': 'What are the budget and timeline constraints?',
+    'constraints.compliance': 'What compliance standards must be met?',
+    'architecture.principles': 'What are the key design principles?',
+    'architecture.c4_l2_description': 'Provide a container-level architecture description.',
+    'architecture.data_model': 'What is the high-level data model?',
+    'nfr.availability': 'What are the uptime requirements?',
+    'nfr.maintainability': 'What are the maintainability requirements?',
+    'security.threat_model': 'What is the threat model summary?',
+    'security.controls': 'What are the key security controls?',
+    'privacy.controls': 'What are the data privacy controls?',
+    'ops.monitoring': 'What is the monitoring and alerting strategy?',
+    'implementation.testing_strategy': 'What is the testing strategy?',
+    'risks.business': 'What are the biggest business risks?'
+  };
+  
+  // Startup complexity: Lean, MVP-focused requirements for early-stage products (legacy)
   const startup_reqs = {
     ...base_reqs,
     'doc.created_date': 'What is the creation date for this TDD?',
@@ -611,14 +717,21 @@ function getMpkfRequirements(complexity) {
   };
 
   const requirements = {
+    // New graduated complexity levels
+    base: { required_fields: base_reqs },
+    minimal: { required_fields: minimal_reqs },
+    standard: { required_fields: standard_reqs },
+    comprehensive: { required_fields: comprehensive_reqs },
+    enterprise: { required_fields: enterprise_reqs },
+    
+    // Legacy levels for backward compatibility
     simple: { required_fields: base_reqs },
     startup: { required_fields: startup_reqs },
-    enterprise: { required_fields: enterprise_reqs },
     'mcp-specific': { required_fields: mcp_reqs },
-    'mcp': { required_fields: mcp_reqs }  // Support both 'mcp' and 'mcp-specific'
+    'mcp': { required_fields: mcp_reqs }
   };
 
-  return requirements[complexity] || requirements.enterprise;
+  return requirements[complexity] || requirements.standard;
 }
 
 /**
@@ -713,9 +826,16 @@ function generateAuditReports(project_data, master_reqs, tddOutput, complexity) 
     : '';
 
   const sectionCountMap = {
+    // New graduated levels
+    'base': '2 sections (foundation, summary)',
+    'minimal': '3 sections (+ architecture)',
+    'standard': '5 sections (+ operations, security)',
+    'comprehensive': '7 sections (+ privacy, implementation)',
+    'enterprise': '9 full stages (+ risks, compliance)',
+    
+    // Legacy levels
     'simple': '4 basic',
     'startup': '7 MVP-focused',
-    'enterprise': '9 stages',
     'mcp-specific': '9 stages + MCP section',
     'mcp': '9 stages + MCP section'
   };

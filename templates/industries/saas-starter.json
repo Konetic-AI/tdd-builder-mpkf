@@ -1,0 +1,67 @@
+{
+  "template_name": "SaaS Starter",
+  "template_version": "1.0.0",
+  "description": "Pre-configured template for SaaS applications with multi-tenancy, rate limiting, subscription billing, and SSO",
+  "tag_focus": ["architecture", "security", "operations", "business"],
+  "complexity_recommendation": "standard",
+  "defaults": {
+    "doc.version": "1.0.0",
+    "deployment.model": "cloud",
+    "cloud.provider": "aws",
+    "cloud.regions": ["us-east-1", "us-west-2"],
+    "security.auth": ["oauth2", "saml", "mfa"],
+    "privacy.pii": true,
+    "privacy.controls": ["data-masking", "right-to-deletion", "consent-management", "data-retention-policies"],
+    "privacy.regulations": ["gdpr", "ccpa"],
+    "security.controls": ["encryption-at-rest", "encryption-in-transit", "audit-logging", "access-control", "vulnerability-scanning"],
+    "operations.monitoring": ["metrics", "logging", "tracing", "alerting", "apm"],
+    "operations.sla": "99.9",
+    "architecture.scale": "medium",
+    "architecture.style": "microservices",
+    "architecture.tenancy": "multi-tenant",
+    "architecture.data_isolation": "schema-per-tenant",
+    "api.rate_limiting": true,
+    "api.rate_limit_strategy": "token-bucket",
+    "api.rate_limits": {
+      "free_tier": "100 requests/hour",
+      "basic_tier": "1000 requests/hour",
+      "premium_tier": "10000 requests/hour",
+      "enterprise_tier": "unlimited"
+    },
+    "billing.model": "subscription",
+    "billing.tiers": ["free", "basic", "premium", "enterprise"],
+    "billing.payment_provider": "stripe",
+    "billing.usage_tracking": true,
+    "sso.providers": ["google", "microsoft", "okta"],
+    "sso.protocol": "saml2",
+    "features.tenant_isolation": true,
+    "features.self_service_signup": true,
+    "features.admin_portal": true,
+    "features.usage_analytics": true,
+    "database.type": "postgresql",
+    "database.replication": "master-replica",
+    "cache.enabled": true,
+    "cache.provider": "redis",
+    "ci_cd.enabled": true,
+    "ci_cd.pipeline": "github-actions",
+    "testing.strategy": ["unit", "integration", "e2e"]
+  },
+  "skip_sections": [
+    "datacenter.location",
+    "legacy.systems"
+  ],
+  "recommended_questions": [
+    "project.name",
+    "project.description",
+    "summary.problem",
+    "summary.solution",
+    "stakeholders_and_personas",
+    "quality_goals",
+    "constraints",
+    "api.versioning",
+    "api.documentation",
+    "backup.strategy",
+    "disaster_recovery"
+  ]
+}
+

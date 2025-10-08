@@ -1,0 +1,13 @@
+{
+  "doc.version": "1.0",
+  "project.name": "E-Commerce Platform",
+  "project.description": "A modern e-commerce platform for selling digital products with integrated payment processing and user management.",
+  "summary.problem": "Small businesses lack affordable, easy-to-use platforms to sell digital products online without technical expertise.",
+  "summary.solution": "Build a no-code e-commerce platform with drag-and-drop store builder, integrated payments, and automated delivery of digital products.",
+  "deployment.model": "cloud",
+  "cloud.provider": "aws",
+  "cloud.regions": ["us-east-1", "us-west-2"],
+  "security.auth": ["oauth2", "mfa"],
+  "privacy.pii": true
+}
+
