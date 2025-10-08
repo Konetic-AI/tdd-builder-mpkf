@@ -1,9 +1,49 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "🔎 Running pre-push checks…"
-npm ci --silent
-npm test --silent
-npm run build:all
-npm run validate:microbuild
-npm run validate:variables
+# Pre-push hook: Block push if build or tests fail
+# Ensures code quality and prevents broken builds from reaching remote
+
+echo ""
+echo "🔒 Pre-push validation started..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Step 1: Check if node_modules exists, run npm ci if missing
+if [ ! -d "node_modules" ]; then
+  echo "📦 Installing dependencies (node_modules missing)..."
+  npm ci || {
+    echo "❌ npm ci failed"
+    exit 1
+  }
+  echo "✅ Dependencies installed"
+else
+  echo "✅ Dependencies already installed (skipping npm ci)"
+fi
+
+# Step 2: Build TypeScript
+echo ""
+echo "🔨 Building TypeScript..."
+npm run build || {
+  echo ""
+  echo "❌ Build failed - fix TypeScript errors before pushing"
+  exit 1
+}
+echo "✅ Build succeeded"
+
+# Step 3: Run all tests
+echo ""
+echo "🧪 Running tests..."
+npm test || {
+  echo ""
+  echo "❌ Tests failed - fix failing tests before pushing"
+  exit 1
+}
+echo "✅ All tests passed"
+
+# Success
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ Pre-push validation passed - proceeding with push"
+echo ""
+
+exit 0

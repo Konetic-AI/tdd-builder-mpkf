@@ -48,12 +48,14 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
         continue-on-error: true
+        if: secrets.CODECOV_TOKEN != ''
       
       - name: Upload exports
         uses: actions/upload-artifact@v4
         with:
-          name: tdd-exports-${{ github.run_id }}-${{ github.run_attempt }}
+          name: tdd-exports-node-${{ matrix.node-version }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             exports/**
             output/**
@@ -63,7 +65,7 @@ jobs:
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ github.run_id }}-${{ github.run_attempt }}
+          name: coverage-node-${{ matrix.node-version }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: coverage/
           if-no-files-found: warn
         if: always()

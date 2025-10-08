@@ -744,7 +744,7 @@ async function nonInteractiveMode(filePath) {
       complexity: complexity
     };
   } catch (error) {
-    throw new Error(`Failed to load file: ${error.message}`);
+    throw new Error(`Failed to load answers file '${filePath}': ${error.message}`);
   }
 }
 
@@ -972,7 +972,7 @@ function loadTemplate(templateName) {
   
   try {
     if (!fsSync.existsSync(templatePath)) {
-      throw new Error(`Template '${templateName}' not found`);
+      throw new Error(`Template '${templateName}' not found. Available templates: ${listAvailableTemplates().join(', ')}`);
     }
     
     const templateData = fsSync.readFileSync(templatePath, 'utf8');
@@ -984,7 +984,7 @@ function loadTemplate(templateName) {
     
     return template;
   } catch (error) {
-    throw new Error(`Failed to load template: ${error.message}`);
+    throw new Error(`Template error: ${error.message}`);
   }
 }
 
@@ -1044,7 +1044,7 @@ function parseArgs(args) {
       // Legacy complexity mapping
       const legacyMap = {
         'simple': 'base',
-        'startup': 'standard',
+        'startup': 'minimal',
         'enterprise': 'enterprise',
         'mcp-specific': 'comprehensive'
       };
@@ -1057,8 +1057,13 @@ function parseArgs(args) {
       } else if (validComplexities.includes(complexityValue)) {
         options.complexity = complexityValue;
       } else {
-        console.error('Invalid complexity level');
+        console.error(`Invalid complexity level: "${complexityValue}". Valid options: ${validComplexities.join(', ')}`);
         process.exit(1);
+      }
+
+      // Adjust legacy mode complexity handling
+      if (options.legacy && options.complexity === 'minimal') {
+        options.complexity = 'minimal';
       }
     } else if (arg === '--pdf') {
       options.pdf = true;
