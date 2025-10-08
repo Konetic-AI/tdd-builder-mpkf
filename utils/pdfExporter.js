@@ -1,6 +1,10 @@
 /**
  * PDF Export utility for TDD documents
  * Uses Puppeteer for headless PDF generation
+ * Falls back to formatted text export if Puppeteer is unavailable
+ * 
+ * Environment Variables:
+ * - EXPORT_PATH: Configurable export directory (default: ./exports)
  */
 
 const fs = require('fs').promises;
@@ -11,10 +15,12 @@ class PDFExporter {
     this.puppeteer = null;
     this.browser = null;
     this.isInitialized = false;
+    this.exportPath = process.env.EXPORT_PATH || './exports';
   }
 
   /**
    * Initialize Puppeteer browser instance
+   * Gracefully handles Puppeteer not being installed
    */
   async initialize() {
     if (this.isInitialized) return;
@@ -34,9 +40,9 @@ class PDFExporter {
         ]
       });
       this.isInitialized = true;
-      console.log('PDF Exporter: Puppeteer initialized successfully');
     } catch (error) {
-      console.warn('PDF Exporter: Puppeteer not available, falling back to text export');
+      // Puppeteer is optional - fall back to text export without failing
+      console.warn('Puppeteer not available - using text export fallback');
       this.isInitialized = false;
     }
   }
@@ -54,6 +60,7 @@ class PDFExporter {
 
   /**
    * Export markdown to PDF format using Puppeteer
+   * Falls back to formatted text export if Puppeteer unavailable or errors occur
    * @param {string} markdownContent - The markdown content
    * @param {string} outputPath - Where to save the file
    * @returns {Promise<boolean>} - Success status
@@ -62,7 +69,6 @@ class PDFExporter {
     await this.initialize();
 
     if (!this.isInitialized) {
-      console.warn('PDF Exporter: Falling back to text export');
       return this.exportAsFormattedText(markdownContent, outputPath);
     }
 
@@ -91,8 +97,19 @@ class PDFExporter {
 
       await page.close();
       
-      // Ensure output directory exists
-      await fs.mkdir(path.dirname(outputPath), { recursive: true });
+      // Ensure output directory exists (handles any path safely)
+      const outputDir = path.dirname(outputPath);
+      try {
+        await fs.mkdir(outputDir, { recursive: true });
+      } catch (mkdirError) {
+        // If mkdir fails due to permissions, try using EXPORT_PATH
+        console.warn(`Cannot create directory ${outputDir}, using EXPORT_PATH`);
+        const safePath = path.join(this.exportPath, path.basename(outputPath));
+        await fs.mkdir(this.exportPath, { recursive: true });
+        await fs.writeFile(safePath, pdfBuffer);
+        console.log(`✅ PDF exported to: ${safePath}`);
+        return true;
+      }
       
       // Write PDF file
       await fs.writeFile(outputPath, pdfBuffer);
@@ -100,8 +117,7 @@ class PDFExporter {
       console.log(`✅ PDF exported to: ${outputPath}`);
       return true;
     } catch (error) {
-      console.error('PDF export failed:', error);
-      console.warn('Falling back to text export');
+      console.warn('PDF generation failed, falling back to text export');
       return this.exportAsFormattedText(markdownContent, outputPath);
     }
   }
@@ -178,6 +194,7 @@ class PDFExporter {
   /**
    * Export as formatted text file
    * Preserves structure better than basic text
+   * Uses safe paths with automatic directory creation
    */
   async exportAsFormattedText(markdownContent, outputPath) {
     try {
@@ -204,12 +221,25 @@ class PDFExporter {
         .replace(/`(.+?)`/g, '"$1"')         // Code to quotes
         .replace(/^\- /gm, '• ');            // Lists to bullets
 
-      // Save as .txt file (since we can't create real PDFs)
+      // Determine safe output path
       const txtPath = outputPath.replace('.pdf', '.txt');
-      await fs.writeFile(txtPath, formattedContent, 'utf8');
-
-      console.log(`✅ Document exported to: ${txtPath}`);
-      return true;
+      const outputDir = path.dirname(txtPath);
+      
+      try {
+        // Try to create the requested directory
+        await fs.mkdir(outputDir, { recursive: true });
+        await fs.writeFile(txtPath, formattedContent, 'utf8');
+        console.log(`✅ Document exported to: ${txtPath}`);
+        return true;
+      } catch (dirError) {
+        // If directory creation fails, use EXPORT_PATH as fallback
+        console.warn(`Cannot write to ${outputDir}, using EXPORT_PATH`);
+        await fs.mkdir(this.exportPath, { recursive: true });
+        const safePath = path.join(this.exportPath, path.basename(txtPath));
+        await fs.writeFile(safePath, formattedContent, 'utf8');
+        console.log(`✅ Document exported to: ${safePath}`);
+        return true;
+      }
     } catch (error) {
       console.error('Export failed:', error);
       return false;
@@ -218,6 +248,7 @@ class PDFExporter {
 
   /**
    * Batch export multiple files
+   * Uses safe paths with automatic fallback to EXPORT_PATH
    */
   async batchExport(inputDir, outputDir) {
     try {
@@ -229,7 +260,14 @@ class PDFExporter {
         return [];
       }
 
-      await fs.mkdir(outputDir, { recursive: true });
+      // Try to create output directory, fall back to EXPORT_PATH if needed
+      try {
+        await fs.mkdir(outputDir, { recursive: true });
+      } catch (error) {
+        console.warn(`Cannot create ${outputDir}, using EXPORT_PATH`);
+        outputDir = this.exportPath;
+        await fs.mkdir(outputDir, { recursive: true });
+      }
 
       const results = [];
       for (const file of mdFiles) {

@@ -27,6 +27,7 @@ const PDFExporter = require('../utils/pdfExporter');
 describe('PDF Export Tests', () => {
   let pdfExporter;
   const testOutputDir = path.join(__dirname, 'temp_pdf_output');
+  const originalExportPath = process.env.EXPORT_PATH;
 
   beforeEach(() => {
     // Create a new instance for each test
@@ -35,6 +36,13 @@ describe('PDF Export Tests', () => {
   });
 
   afterEach(async () => {
+    // Restore original EXPORT_PATH
+    if (originalExportPath) {
+      process.env.EXPORT_PATH = originalExportPath;
+    } else {
+      delete process.env.EXPORT_PATH;
+    }
+    
     // Clean up test files
     try {
       await fs.rm(testOutputDir, { recursive: true, force: true });
@@ -196,6 +204,125 @@ code block
 
       const result = await pdfExporter.exportToPDF(markdownContent, outputPath);
       expect(result).toBe(true);
+    });
+  });
+
+  describe('EXPORT_PATH Configuration', () => {
+    test('should use default EXPORT_PATH when not set', () => {
+      delete process.env.EXPORT_PATH;
+      const exporter = new (require('../utils/pdfExporter').constructor)();
+      expect(exporter.exportPath).toBe('./exports');
+    });
+
+    test('should use custom EXPORT_PATH when set', () => {
+      process.env.EXPORT_PATH = '/tmp/custom-exports';
+      const exporter = new (require('../utils/pdfExporter').constructor)();
+      expect(exporter.exportPath).toBe('/tmp/custom-exports');
+    });
+
+    test('should create EXPORT_PATH directory when exporting', async () => {
+      const customExportPath = path.join(testOutputDir, 'custom-exports');
+      process.env.EXPORT_PATH = customExportPath;
+      
+      // Mock Puppeteer to fail, forcing text export fallback
+      mockPuppeteer.launch.mockRejectedValueOnce(new Error('Puppeteer not available'));
+      
+      const markdownContent = '# Test Document\n\nContent here.';
+      const outputPath = path.join('/invalid/permission/denied', 'test.pdf');
+      
+      const exporter = new (require('../utils/pdfExporter').constructor)();
+      const result = await exporter.exportToPDF(markdownContent, outputPath);
+      
+      expect(result).toBe(true);
+      
+      // Verify EXPORT_PATH directory was created
+      const dirExists = await fs.access(customExportPath).then(() => true).catch(() => false);
+      expect(dirExists).toBe(true);
+      
+      // Verify file was written to EXPORT_PATH
+      const txtPath = path.join(customExportPath, 'test.txt');
+      const fileExists = await fs.access(txtPath).then(() => true).catch(() => false);
+      expect(fileExists).toBe(true);
+    });
+  });
+
+  describe('Directory Creation', () => {
+    test('should create output directory if it does not exist', async () => {
+      const markdownContent = '# Test Document';
+      const nestedPath = path.join(testOutputDir, 'deeply', 'nested', 'path', 'test.pdf');
+
+      const result = await pdfExporter.exportToPDF(markdownContent, nestedPath);
+      
+      expect(result).toBe(true);
+      
+      // Verify directories were created
+      const dirExists = await fs.access(path.dirname(nestedPath)).then(() => true).catch(() => false);
+      expect(dirExists).toBe(true);
+    });
+
+    test('should handle mkdir failures gracefully with EXPORT_PATH fallback', async () => {
+      const customExportPath = path.join(testOutputDir, 'fallback-exports');
+      process.env.EXPORT_PATH = customExportPath;
+      
+      const markdownContent = '# Test Document';
+      // Use a path that would typically fail (if /root is not writable)
+      const invalidPath = '/root/test.pdf';
+      
+      const exporter = new (require('../utils/pdfExporter').constructor)();
+      const result = await exporter.exportToPDF(markdownContent, invalidPath);
+      
+      // Should succeed by falling back to EXPORT_PATH
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('Puppeteer Not Installed', () => {
+    test('should fall back to text export when Puppeteer is not installed', async () => {
+      // Mock Puppeteer to throw MODULE_NOT_FOUND error
+      mockPuppeteer.launch.mockRejectedValueOnce(new Error("Cannot find module 'puppeteer'"));
+      
+      const markdownContent = '# Test Document\n\nThis should export as text.';
+      const outputPath = path.join(testOutputDir, 'no-puppeteer.pdf');
+
+      await fs.mkdir(testOutputDir, { recursive: true });
+
+      const result = await pdfExporter.exportToPDF(markdownContent, outputPath);
+
+      expect(result).toBe(true);
+      
+      // Should create a .txt file instead of .pdf
+      const txtPath = outputPath.replace('.pdf', '.txt');
+      const fileExists = await fs.access(txtPath).then(() => true).catch(() => false);
+      expect(fileExists).toBe(true);
+      
+      // Verify content was written
+      const content = await fs.readFile(txtPath, 'utf8');
+      expect(content).toContain('Test Document');
+    });
+
+    test('should log warning when Puppeteer is unavailable', async () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      
+      mockPuppeteer.launch.mockRejectedValueOnce(new Error('Puppeteer not available'));
+      
+      await pdfExporter.initialize();
+      
+      expect(consoleSpy).toHaveBeenCalledWith('Puppeteer not available - using text export fallback');
+      expect(pdfExporter.isInitialized).toBe(false);
+      
+      consoleSpy.mockRestore();
+    });
+
+    test('should not fail CI when Puppeteer is not installed', async () => {
+      mockPuppeteer.launch.mockRejectedValueOnce(new Error("Cannot find module 'puppeteer'"));
+      
+      const markdownContent = '# CI Test Document';
+      const outputPath = path.join(testOutputDir, 'ci-test.pdf');
+
+      await fs.mkdir(testOutputDir, { recursive: true });
+
+      // This should not throw an error
+      await expect(pdfExporter.exportToPDF(markdownContent, outputPath)).resolves.toBe(true);
     });
   });
 });
