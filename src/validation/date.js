@@ -2,7 +2,12 @@
  * @fileoverview Strict ISO-8601 date validation utilities (JavaScript version)
  * Implements comprehensive validation for all ISO-8601 date and datetime formats
  * with support for leap years, timezones, and edge cases.
+ * 
+ * Uses Luxon for robust date parsing with full timezone support including
+ * positive/negative offsets (e.g., +05:30, -08:00).
  */
+
+const { DateTime } = require('luxon');
 
 /**
  * Validation result object
@@ -143,7 +148,8 @@ function validateMilliseconds(ms) {
 }
 
 /**
- * Validates a date string against ISO-8601 standards
+ * Validates a date string against ISO-8601 standards using Luxon
+ * Provides robust parsing with full timezone support including positive/negative offsets
  * @param {string} dateString - The date string to validate
  * @returns {DateValidationResult} - Validation result object
  */
@@ -156,191 +162,60 @@ function validateIS8601Date(dateString) {
     };
   }
 
-  // Determine format using specific regex patterns
-  let format = null;
-  let match = null;
+  // Use Luxon for robust ISO-8601 parsing
+  // setZone: true preserves the timezone information from the input
+  const parsedDateTime = DateTime.fromISO(dateString, { setZone: true });
 
-  // Check each format specifically
+  // Check if the date is valid
+  if (!parsedDateTime.isValid) {
+    // Luxon provides detailed error information
+    const errorReason = parsedDateTime.invalidReason || 'Invalid format';
+    const errorExplanation = parsedDateTime.invalidExplanation || '';
+    
+    return {
+      isValid: false,
+      error: `Invalid ISO-8601 date: ${errorReason}${errorExplanation ? ' - ' + errorExplanation : ''}. Supported formats include: ${Object.values(ISO8601_FORMATS).join(', ')}`
+    };
+  }
+
+  // Additional validation: check for reasonable date ranges
+  const year = parsedDateTime.year;
+  if (year < 1900 || year > 2100) {
+    return {
+      isValid: false,
+      error: `Year must be between 1900 and 2100, got ${year}`
+    };
+  }
+
+  // Detect the format used
+  let detectedFormat = null;
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    format = ISO8601_FORMATS.DATE;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
-    format = ISO8601_FORMATS.DATETIME;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/);
-  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/)) {
-    format = ISO8601_FORMATS.DATETIME_MS;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/);
-  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)) {
-    format = ISO8601_FORMATS.DATETIME_Z;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/);
-  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)) {
-    format = ISO8601_FORMATS.DATETIME_MS_Z;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/);
-  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/)) {
-    format = ISO8601_FORMATS.DATETIME_TZ;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}):(\d{2})$/);
+    detectedFormat = ISO8601_FORMATS.DATE;
   } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}$/)) {
-    format = ISO8601_FORMATS.DATETIME_MS_TZ;
-    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})([+-])(\d{2}):(\d{2})$/);
-  } else if (dateString.match(/^\d{2}:\d{2}:\d{2}$/)) {
-    format = ISO8601_FORMATS.TIME;
-    match = dateString.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-  } else if (dateString.match(/^\d{2}:\d{2}:\d{2}\.\d{3}$/)) {
-    format = ISO8601_FORMATS.TIME_MS;
-    match = dateString.match(/^(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/);
-  } else if (dateString.match(/^\d{2}:\d{2}:\d{2}Z$/)) {
-    format = ISO8601_FORMATS.TIME_Z;
-    match = dateString.match(/^(\d{2}):(\d{2}):(\d{2})Z$/);
-  } else if (dateString.match(/^\d{2}:\d{2}:\d{2}\.\d{3}Z$/)) {
-    format = ISO8601_FORMATS.TIME_MS_Z;
-    match = dateString.match(/^(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/);
-  } else if (dateString.match(/^\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/)) {
-    format = ISO8601_FORMATS.TIME_TZ;
-    match = dateString.match(/^(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}):(\d{2})$/);
-  } else if (dateString.match(/^\d{2}:\d{2}:\d{2}\.\d{3}[+-]\d{2}:\d{2}$/)) {
-    format = ISO8601_FORMATS.TIME_MS_TZ;
-    match = dateString.match(/^(\d{2}):(\d{2}):(\d{2})\.(\d{3})([+-])(\d{2}):(\d{2})$/);
-  }
-
-  if (!format || !match) {
-    return {
-      isValid: false,
-      error: `Invalid ISO-8601 format. Supported formats: ${Object.values(ISO8601_FORMATS).join(', ')}`
-    };
-  }
-
-  // Parse components based on format
-  let year, month, day;
-  let hour = 0, minute = 0, second = 0, milliseconds = 0;
-  let timezoneSign = '+', timezoneHours = 0, timezoneMinutes = 0;
-
-  try {
-    switch (format) {
-      case ISO8601_FORMATS.DATE:
-        [, year, month, day] = match.map(Number);
-        break;
-        
-      case ISO8601_FORMATS.DATETIME:
-        [, year, month, day, hour, minute, second] = match.map(Number);
-        break;
-        
-      case ISO8601_FORMATS.DATETIME_MS:
-        [, year, month, day, hour, minute, second, milliseconds] = match.map(Number);
-        break;
-        
-      case ISO8601_FORMATS.DATETIME_Z:
-        [, year, month, day, hour, minute, second] = match.map(Number);
-        timezoneSign = 'Z';
-        break;
-        
-      case ISO8601_FORMATS.DATETIME_MS_Z:
-        [, year, month, day, hour, minute, second, milliseconds] = match.map(Number);
-        timezoneSign = 'Z';
-        break;
-        
-      case ISO8601_FORMATS.DATETIME_TZ:
-        [, year, month, day, hour, minute, second, timezoneSign, timezoneHours, timezoneMinutes] = match;
-        timezoneHours = parseInt(timezoneHours, 10);
-        timezoneMinutes = parseInt(timezoneMinutes, 10);
-        break;
-        
-      case ISO8601_FORMATS.DATETIME_MS_TZ:
-        [, year, month, day, hour, minute, second, milliseconds, timezoneSign, timezoneHours, timezoneMinutes] = match;
-        timezoneHours = parseInt(timezoneHours, 10);
-        timezoneMinutes = parseInt(timezoneMinutes, 10);
-        break;
-        
-      default:
-        // For time-only formats, use JavaScript Date parsing
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-          return {
-            isValid: false,
-            error: 'Invalid time format'
-          };
-        }
-        return {
-          isValid: true,
-          format,
-          parsedDate: date
-        };
+    detectedFormat = ISO8601_FORMATS.DATETIME_MS_TZ;
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/)) {
+    detectedFormat = ISO8601_FORMATS.DATETIME_TZ;
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)) {
+    detectedFormat = ISO8601_FORMATS.DATETIME_MS_Z;
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)) {
+    detectedFormat = ISO8601_FORMATS.DATETIME_Z;
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/)) {
+    detectedFormat = ISO8601_FORMATS.DATETIME_MS;
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+    detectedFormat = ISO8601_FORMATS.DATETIME;
+  } else {
+    // Try to determine if it's a time-only format
+    if (dateString.startsWith('T') || dateString.match(/^\d{2}:\d{2}:\d{2}/)) {
+      detectedFormat = 'TIME_VARIANT';
+    } else {
+      detectedFormat = 'ISO-8601';
     }
-  } catch (error) {
-    return {
-      isValid: false,
-      error: `Failed to parse date string: ${error instanceof Error ? error.message : 'Unknown error'}`
-    };
-  }
-
-  // Validate date components (if present)
-  if (format.includes('YYYY-MM-DD')) {
-    const dateError = validateDateComponents(year, month, day);
-    if (dateError) {
-      return {
-        isValid: false,
-        error: dateError
-      };
-    }
-  }
-
-  // Validate time components (if present)
-  if (format.includes('T') || format.startsWith('HH:mm')) {
-    const timeError = validateTimeComponents(hour, minute, second);
-    if (timeError) {
-      return {
-        isValid: false,
-        error: timeError
-      };
-    }
-
-    // Validate milliseconds (if present)
-    if (format.includes('.')) {
-      const msError = validateMilliseconds(milliseconds);
-      if (msError) {
-        return {
-          isValid: false,
-          error: msError
-        };
-      }
-    }
-
-    // Validate timezone (if present)
-    if (timezoneSign && timezoneSign !== '+') {
-      if (timezoneSign === 'Z') {
-        // UTC timezone is always valid
-      } else {
-        const tzError = validateTimezoneOffset(timezoneSign, timezoneHours, timezoneMinutes);
-        if (tzError) {
-          return {
-            isValid: false,
-            error: tzError
-          };
-        }
-      }
-    }
-  }
-
-  // Create the date object
-  let date;
-  try {
-    date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return {
-        isValid: false,
-        error: 'Invalid date - JavaScript Date constructor could not parse the string'
-      };
-    }
-  } catch (error) {
-    return {
-      isValid: false,
-      error: `Failed to create Date object: ${error instanceof Error ? error.message : 'Unknown error'}`
-    };
   }
 
   return {
     isValid: true,
-    format,
-    parsedDate: date
+    format: detectedFormat,
+    parsedDate: parsedDateTime.toJSDate()
   };
 }
 
