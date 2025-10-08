@@ -346,7 +346,31 @@ describe('CLI End-to-End Tests', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.stderr || result.stdout).toContain('Invalid complexity level');
+      expect(result.stderr).toContain('Invalid complexity level');
+    });
+
+    it('should handle legacy complexity value "simple" with deprecation warning', () => {
+      const result = runCLI(`--noninteractive ${testFile} --complexity simple`, {
+        env: { ...process.env, SCHEMA_DRIVEN_ONBOARDING: 'false' }
+      });
+
+      expect(result.stderr || result.stdout).toContain('Deprecated complexity: "simple", using "base"');
+    });
+
+    it('should handle legacy complexity value "startup" with deprecation warning', () => {
+      const result = runCLI(`--noninteractive ${testFile} --complexity startup`, {
+        env: { ...process.env, SCHEMA_DRIVEN_ONBOARDING: 'false' }
+      });
+
+      expect(result.stderr || result.stdout).toContain('Deprecated complexity: "startup", using "standard"');
+    });
+
+    it('should handle legacy complexity value "mcp-specific" with deprecation warning', () => {
+      const result = runCLI(`--noninteractive ${testFile} --complexity mcp-specific`, {
+        env: { ...process.env, SCHEMA_DRIVEN_ONBOARDING: 'false' }
+      });
+
+      expect(result.stderr || result.stdout).toContain('Deprecated complexity: "mcp-specific", using "comprehensive"');
     });
 
     it('should accept all valid complexity levels', () => {

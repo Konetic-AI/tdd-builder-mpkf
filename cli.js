@@ -1045,21 +1045,19 @@ function parseArgs(args) {
       const legacyMap = {
         'simple': 'base',
         'startup': 'standard',
-        'mcp-specific': 'comprehensive',
-        'mcp': 'comprehensive'
+        'enterprise': 'enterprise',
+        'mcp-specific': 'comprehensive'
       };
       
       // Check if it's a legacy value
       if (legacyMap[complexityValue]) {
         const newValue = legacyMap[complexityValue];
-        console.error(`${colors.yellow}⚠️  Deprecation Notice: '${complexityValue}' is deprecated, mapping to '${newValue}'${colors.reset}`);
+        console.warn(`Deprecated complexity: "${complexityValue}", using "${newValue}"`);
         options.complexity = newValue;
       } else if (validComplexities.includes(complexityValue)) {
         options.complexity = complexityValue;
       } else {
-        console.error(`${colors.red}Invalid complexity level${colors.reset}`);
-        console.error(`${colors.yellow}Valid options: ${validComplexities.join(', ')}${colors.reset}`);
-        console.error(`${colors.dim}Legacy values (deprecated): ${Object.keys(legacyMap).join(', ')}${colors.reset}\n`);
+        console.error('Invalid complexity level');
         process.exit(1);
       }
     } else if (arg === '--pdf') {
