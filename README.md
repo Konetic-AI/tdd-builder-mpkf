@@ -211,6 +211,36 @@ export SCHEMA_DRIVEN_ONBOARDING=false
 node cli.js --legacy
 ```
 
+### CI Troubleshooting
+
+When running tests in CI environments, be aware of these key points:
+
+- **ISO-8601 parsing uses Luxon** - Supports Z, +/- timezone offsets (e.g., `2025-10-08T02:00:00+05:00`)
+- **EXPORT_PATH defaults to ./exports** - Set via environment variable; Puppeteer is optional and will fall back to text export if unavailable
+- **SCHEMA_DRIVEN_ONBOARDING=true requires a build step** - TypeScript modules must be compiled before tests with `npm run build`
+- **Codecov requires CODECOV_TOKEN** - Upload step is non-fatal if missing (set `continue-on-error: true`)
+- **Artifacts use unique names per run** - Format: `tdd-exports-${{ github.run_id }}-${{ github.run_attempt }}` to avoid 409 conflicts
+
+**Example CI Configuration:**
+```yaml
+env:
+  SCHEMA_DRIVEN_ONBOARDING: false
+  EXPORT_PATH: ./exports
+
+steps:
+  - name: Build TypeScript
+    run: npm run build
+  
+  - name: Run tests
+    run: npm test
+  
+  - name: Upload coverage to Codecov
+    uses: codecov/codecov-action@v4
+    with:
+      token: ${{ secrets.CODECOV_TOKEN }}
+    continue-on-error: true
+```
+
 ### Checking Current Mode
 
 The banner displays the current operational mode:
