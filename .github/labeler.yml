@@ -1,0 +1,98 @@
+# Auto-labeling configuration for PRs
+# Labels are automatically added based on changed files
+
+# Documentation changes
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', 'docs/**/*']
+
+# TypeScript/JavaScript changes
+typescript:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.ts', '**/*.tsx']
+
+javascript:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.js', '**/*.jsx']
+
+# Testing
+tests:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.test.{js,ts}', '**/*.spec.{js,ts}', 'tests/**/*']
+
+# CI/CD
+ci:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/workflows/**/*', '.github/actions/**/*']
+
+# Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: ['package.json', 'package-lock.json', 'npm-shrinkwrap.json']
+
+# Configuration
+configuration:
+  - changed-files:
+    - any-glob-to-any-file: ['*.config.js', '*.config.ts', 'tsconfig.json', 'jest.config.js']
+
+# Scripts
+scripts:
+  - changed-files:
+    - any-glob-to-any-file: ['scripts/**/*']
+
+# Templates
+templates:
+  - changed-files:
+    - any-glob-to-any-file: ['templates/**/*']
+
+# Schema
+schema:
+  - changed-files:
+    - any-glob-to-any-file: ['schemas/**/*']
+
+# Source code
+src:
+  - changed-files:
+    - any-glob-to-any-file: ['src/**/*']
+
+# Handlers
+handlers:
+  - changed-files:
+    - any-glob-to-any-file: ['handlers/**/*']
+
+# Examples
+examples:
+  - changed-files:
+    - any-glob-to-any-file: ['examples/**/*']
+
+# Features by area
+feature:validation:
+  - changed-files:
+    - any-glob-to-any-file: ['src/validation/**/*', 'src/lib/validateAnswer.*']
+
+feature:schema:
+  - changed-files:
+    - any-glob-to-any-file: ['src/lib/schemaLoader.*', 'schemas/**/*']
+
+feature:cli:
+  - changed-files:
+    - any-glob-to-any-file: ['cli.js', 'src/lib/reviewScreen.*']
+
+feature:generation:
+  - changed-files:
+    - any-glob-to-any-file: ['handlers/generate_tdd.js', 'src/handlers/generateTdd.*']
+
+feature:routing:
+  - changed-files:
+    - any-glob-to-any-file: ['src/lib/tagRouter.*']
+
+feature:rules:
+  - changed-files:
+    - any-glob-to-any-file: ['src/lib/rulesEngine.*']
+
+# Breaking changes (based on major version bump or breaking commit messages)
+breaking-change:
+  - changed-files:
+    - any-glob-to-any-file: ['package.json']
+    - head-branch: ['^breaking/', '^major/']
+

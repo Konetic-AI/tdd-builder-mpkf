@@ -1,0 +1,222 @@
+name: PR Automation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  auto-label:
+    name: Auto-label PR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Auto-label based on files
+        uses: actions/labeler@v5
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  pr-description:
+    name: Enhance PR Description
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate PR metrics
+        id: metrics
+        run: |
+          # Get changed files
+          FILES_CHANGED=$(git diff --name-only origin/main...HEAD | wc -l)
+          echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
+          
+          # Get line changes
+          CHANGES=$(git diff --shortstat origin/main...HEAD)
+          echo "changes=$CHANGES" >> $GITHUB_OUTPUT
+          
+          # Get commit count
+          COMMITS=$(git rev-list --count origin/main...HEAD)
+          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+
+      - name: Check for breaking changes
+        id: breaking
+        run: |
+          BREAKING=""
+          if git log origin/main...HEAD --oneline | grep -i "breaking\|BREAKING"; then
+            BREAKING="⚠️ **This PR contains breaking changes**"
+          fi
+          echo "breaking=$BREAKING" >> $GITHUB_OUTPUT
+
+      - name: Generate checklist
+        id: checklist
+        run: |
+          CHECKLIST=$(cat << 'EOF'
+          ## 🔍 Pre-merge Checklist
+          
+          - [ ] All tests pass locally and in CI
+          - [ ] Documentation updated (if needed)
+          - [ ] CHANGELOG.md updated with changes
+          - [ ] No breaking changes (or documented if present)
+          - [ ] Backward compatibility maintained
+          - [ ] Security considerations reviewed
+          - [ ] Performance impact assessed
+          
+          ## 🧪 Testing
+          
+          - [ ] Unit tests added/updated
+          - [ ] E2E tests pass
+          - [ ] Manual testing completed
+          - [ ] All complexity levels validated (if applicable)
+          
+          ## 📚 Documentation
+          
+          - [ ] README updated (if needed)
+          - [ ] Code comments added for complex logic
+          - [ ] Examples/demos updated (if needed)
+          EOF
+          )
+          echo "checklist<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHECKLIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const metrics = {
+              files: '${{ steps.metrics.outputs.files_changed }}',
+              changes: '${{ steps.metrics.outputs.changes }}',
+              commits: '${{ steps.metrics.outputs.commits }}'
+            };
+            
+            const breaking = '${{ steps.breaking.outputs.breaking }}';
+            const checklist = `${{ steps.checklist.outputs.checklist }}`;
+            
+            const body = `## 🤖 Automated PR Summary
+
+            ### 📊 Metrics
+            - **Files Changed**: ${metrics.files}
+            - **Commits**: ${metrics.commits}
+            - **Changes**: ${metrics.changes}
+
+            ${breaking ? '\n' + breaking + '\n' : ''}
+
+            ${checklist}
+
+            ### 🔗 Useful Links
+            - [CI Pipeline](https://github.com/${{ github.repository }}/actions)
+            - [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+            - [Contributing Guide](https://github.com/${{ github.repository }}/blob/main/README.md#contributing)
+
+            ---
+            *This comment was automatically generated. Edit your PR description to add more context.*
+            `;
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+  size-label:
+    name: Label PR Size
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate PR size
+        id: size
+        run: |
+          ADDITIONS=$(git diff --shortstat origin/main...HEAD | grep -oP '\d+(?= insertion)' || echo 0)
+          DELETIONS=$(git diff --shortstat origin/main...HEAD | grep -oP '\d+(?= deletion)' || echo 0)
+          TOTAL=$((ADDITIONS + DELETIONS))
+          
+          if [ $TOTAL -lt 50 ]; then
+            SIZE="XS"
+          elif [ $TOTAL -lt 200 ]; then
+            SIZE="S"
+          elif [ $TOTAL -lt 500 ]; then
+            SIZE="M"
+          elif [ $TOTAL -lt 1000 ]; then
+            SIZE="L"
+          else
+            SIZE="XL"
+          fi
+          
+          echo "size=$SIZE" >> $GITHUB_OUTPUT
+
+      - name: Add size label
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const size = '${{ steps.size.outputs.size }}';
+            
+            // Remove existing size labels
+            const existingLabels = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            for (const label of existingLabels.data) {
+              if (label.name.startsWith('size/')) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: label.name
+                });
+              }
+            }
+            
+            // Add new size label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [`size/${size}`]
+            });
+
+  link-issues:
+    name: Link Related Issues
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Link issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+            const issueNumbers = prBody.match(/#\d+/g) || [];
+            
+            if (issueNumbers.length > 0) {
+              const uniqueIssues = [...new Set(issueNumbers.map(num => num.slice(1)))];
+              
+              const comment = `## 🔗 Linked Issues\n\nThis PR references: ${uniqueIssues.map(num => `#${num}`).join(', ')}\n\n`;
+              
+              console.log('Found linked issues:', uniqueIssues);
+            }
+
