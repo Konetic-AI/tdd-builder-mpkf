@@ -1,0 +1,23 @@
+--- a/utils/pdfExporter.js
++++ b/utils/pdfExporter.js
+@@ -15,6 +15,7 @@ class PDFExporter {
+     this.puppeteer = null;
+     this.browser = null;
+     this.isInitialized = false;
++    this.hasWarnedPuppeteer = false;
+     this.exportPath = process.env.EXPORT_PATH || './exports';
+   }
+ 
+@@ -42,7 +43,9 @@ class PDFExporter {
+       this.isInitialized = true;
+     } catch (error) {
+       // Puppeteer is optional - fall back to text export without failing
+-      console.warn('PDF exporter: Puppeteer not available; using text export fallback.');
++      if (!this.hasWarnedPuppeteer) {
++        console.warn('PDF exporter: Puppeteer not available; using text export fallback.');
++        this.hasWarnedPuppeteer = true;
++      }
+       this.isInitialized = false;
+     }
+   }
+

@@ -1,0 +1,7 @@
+--- Delete these empty test files ---
+
+tests/simple.test.js - Empty file with no tests
+tests/audit-minimal.test.js - Empty file with no tests
+
+These files should be deleted to avoid "Test suite must contain at least one test" error.
+

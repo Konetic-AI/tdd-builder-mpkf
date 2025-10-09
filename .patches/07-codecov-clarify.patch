@@ -1,0 +1,13 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -46,9 +46,10 @@ jobs:
+       
+       - name: Upload coverage to Codecov
+         uses: codecov/codecov-action@v4
+         with:
+           token: ${{ secrets.CODECOV_TOKEN }}
++          fail_ci_if_error: false
+         continue-on-error: true
++        if: secrets.CODECOV_TOKEN != ''
+ 
+

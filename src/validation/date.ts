@@ -305,17 +305,16 @@ export function validateIS8601Date(dateString: string): DateValidationResult {
     }
     
     // Validate timezone (if present)
-    if (timezoneSign !== '+') {
-      if (timezoneSign === 'Z') {
-        // UTC timezone is always valid
-      } else {
-        const tzError = validateTimezoneOffset(timezoneSign, timezoneHours, timezoneMinutes);
-        if (tzError) {
-          return {
-            isValid: false,
-            error: tzError
-          };
-        }
+    if (timezoneSign === 'Z') {
+      // UTC timezone is always valid
+    } else if (timezoneSign === '+' || timezoneSign === '-') {
+      // Validate both positive and negative timezone offsets
+      const tzError = validateTimezoneOffset(timezoneSign, timezoneHours, timezoneMinutes);
+      if (tzError) {
+        return {
+          isValid: false,
+          error: tzError
+        };
       }
     }
   }

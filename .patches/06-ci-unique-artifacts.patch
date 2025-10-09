@@ -1,0 +1,24 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -52,9 +52,9 @@ jobs:
+       
+       - name: Upload exports
+         uses: actions/upload-artifact@v4
+         with:
+-          name: tdd-exports-${{ github.run_id }}-${{ github.run_attempt }}
++          name: tdd-exports-node-${{ matrix.node-version }}-${{ github.run_id }}-${{ github.run_attempt }}
+           path: |
+             exports/**
+             output/**
+           if-no-files-found: warn
+@@ -63,9 +63,9 @@ jobs:
+       - name: Upload coverage artifacts
+         uses: actions/upload-artifact@v4
+         with:
+-          name: coverage-${{ github.run_id }}-${{ github.run_attempt }}
++          name: coverage-node-${{ matrix.node-version }}-${{ github.run_id }}-${{ github.run_attempt }}
+           path: coverage/
+           if-no-files-found: warn
+         if: always()
+ 
+
